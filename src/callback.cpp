@@ -1,7 +1,7 @@
-/* 
- * SPDX-License-Identifier: Apache-2.0
+/*
+ * SPDX-FileCopyrightText: 2021 Sebastian Serewa <neos32.project@gmail.com>
  *
- * Copyright 2021 Sebastian Serewa
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #include "my_common.h"
@@ -60,12 +60,13 @@ static void turn_on_valve(unsigned int channel, unsigned int valve) {
     MosqClient.publish(MQTT_DEV_STATE, str.c_str()); // extra debug
 }
 
-static void set_valve_state_for_time(const state_t &s, boolean mode = INPUT) {
+static void set_valve_state_for_time(const state_t& s, boolean mode = INPUT) {
     if (s.seconds > 0) // means turn on
     {
         if (true == TimerStart(turn_off_valve, s.seconds, s.v1, s.v2)) // 30mins
             turn_on_valve(s.v1, s.v2); // Kanal {MKO}, Zawor [0..4]
-    } else                             // means turn off
+    }
+    else                             // means turn off
     {
         if (true == TimerStop(s.v1, s.v2)) // 30mins
             turn_off_valve(s.v1, s.v2);    // Kanal {MKO}, Zawor [0..4]
@@ -126,7 +127,7 @@ u8 mapChannelValve2Pin(u8 Channel, u8 Valve) {
     return (-1);
 }
 
-static bool decode_CMND_Z(const byte *payload, state_t &s) {
+static bool decode_CMND_Z(const byte* payload, state_t& s) {
     char number;
     char scale;
 
@@ -156,7 +157,7 @@ static bool decode_CMND_Z(const byte *payload, state_t &s) {
 }
 #endif // N32_CFG_VALVE_ENABLED
 
-static bool executeCmnd(state_t &s) {
+static bool executeCmnd(state_t& s) {
     switch (s.action) {
 #if 1 == N32_CFG_VALVE_ENABLED
     case 'Z': // Zawor
@@ -235,7 +236,7 @@ u8 getDecodedChannelNum(u8 uRawNumber) {
     return (CMNDS_NULL); // FAILED
 }
 
-void MQTT_callback(char *topic, byte *payload, unsigned int length) {
+void MQTT_callback(char* topic, byte* payload, unsigned int length) {
     bool msg_accepted = false;
 
 #if 1 == DEBUG_LOCAL
@@ -243,7 +244,7 @@ void MQTT_callback(char *topic, byte *payload, unsigned int length) {
     DEB(topic);
     DEB(F("] '"));
     _FOR(i, 0, (int)length)
-    DEB((char)payload[i]);
+        DEB((char)payload[i]);
     DEBLN(F("'"));
 #endif
 
@@ -308,9 +309,11 @@ void MQTT_callback(char *topic, byte *payload, unsigned int length) {
                 // DEBLN(str);
                 MosqClient.publish(MQTT_DEBUG, " cmnd execution failed!");
             }
-        } else
+        }
+        else
             DEBLN(F(" - failed, message ignored!"));
-    } else {
-       DEB(" ignored!");
+    }
+    else {
+        DEB(" ignored!");
     }
 }

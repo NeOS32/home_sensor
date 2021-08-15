@@ -1,7 +1,7 @@
 /*
- * SPDX-License-Identifier: Apache-2.0
+ * SPDX-FileCopyrightText: 2021 Sebastian Serewa <neos32.project@gmail.com>
  *
- * Copyright 2021 Sebastian Serewa
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 #include "my_common.h"
