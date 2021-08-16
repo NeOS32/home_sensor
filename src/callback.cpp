@@ -1,8 +1,6 @@
-/*
- * SPDX-FileCopyrightText: 2021 Sebastian Serewa <neos32.project@gmail.com>
- *
- * SPDX-License-Identifier: Apache-2.0
- */
+// SPDX-FileCopyrightText: 2021 Sebastian Serewa <neos32.project@gmail.com>
+//
+// SPDX-License-Identifier: Apache-2.0
 
 #include "my_common.h"
 
@@ -64,12 +62,12 @@ static void set_valve_state_for_time(const state_t& s, boolean mode = INPUT) {
     if (s.seconds > 0) // means turn on
     {
         if (true == TimerStart(turn_off_valve, s.seconds, s.v1, s.v2)) // 30mins
-            turn_on_valve(s.v1, s.v2); // Kanal {MKO}, Zawor [0..4]
+            turn_on_valve(s.v1, s.v2); // channel {MKO}, valve [0..4]
     }
-    else                             // means turn off
+    else // means turn off
     {
         if (true == TimerStop(s.v1, s.v2)) // 30mins
-            turn_off_valve(s.v1, s.v2);    // Kanal {MKO}, Zawor [0..4]
+            turn_off_valve(s.v1, s.v2);    // channel {MKO}, valve [0..4]
     }
 }
 
@@ -131,8 +129,8 @@ static bool decode_CMND_Z(const byte* payload, state_t& s) {
     char number;
     char scale;
 
-    s.v1 = *payload++; // v1 = { M,K,O } - (K)anal
-    s.v2 = *payload++; // v2 = [0..4] - Numer zaworu w skrzynce
+    s.v1 = *payload++; // v1 = { M,K,O } - (K)anal / Channel
+    s.v2 = *payload++; // v2 = [0..4] - valve number
     // seconds counting
     number = (*payload++) - '0'; // number = [1..9]
     scale = *payload++; // scale = [SMT] - Seconds/Minutes/TenMinutes/Hours
@@ -160,7 +158,7 @@ static bool decode_CMND_Z(const byte* payload, state_t& s) {
 static bool executeCmnd(state_t& s) {
     switch (s.action) {
 #if 1 == N32_CFG_VALVE_ENABLED
-    case 'Z': // Zawor
+    case 'Z': // Valve
         return (set_valve_state_for_time(s));
 #endif // N32_CFG_VALVE_ENABLED
 
@@ -257,7 +255,7 @@ void MQTT_callback(char* topic, byte* payload, unsigned int length) {
 
         switch (s.action) {
 #if 1 == N32_CFG_VALVE_ENABLED
-        case 'Z': // Zawor
+        case 'Z': // valve
             decode_CMND_Z(payload, s);
             break;
 #endif // N32_CFG_VALVE_ENABLED
