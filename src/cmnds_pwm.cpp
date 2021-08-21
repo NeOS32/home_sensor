@@ -15,9 +15,9 @@
 #endif
 
 
-static bool pwm_getPinFromChannelNum(u8 i_ChannelNumber, u8 & o_PinNumber) {
-    if ( i_ChannelNumber < PWM_NUM_OF_AVAIL_CHANNELS ) {
-        o_PinNumber= PWM_PIN_NUM_FIRST + i_ChannelNumber;
+static bool pwm_getPinFromChannelNum(u8 i_ChannelNumber, u8& o_PinNumber) {
+    if (i_ChannelNumber < PWM_NUM_OF_AVAIL_CHANNELS) {
+        o_PinNumber = PWM_PIN_NUM_FIRST + i_ChannelNumber;
         return true;
     }
 
@@ -25,9 +25,9 @@ static bool pwm_getPinFromChannelNum(u8 i_ChannelNumber, u8 & o_PinNumber) {
     return false; // error, means function failed to execute command
 }
 
-static void pwm_cmnd_FADE_IN(actions_context_t &i_rActionsContext) {
+static void pwm_cmnd_FADE_IN(actions_context_t& i_rActionsContext) {
     u8 PhysicalPin;
-    if ( false == pwm_getPinFromChannelNum(i_rActionsContext.var1, PhysicalPin) ) {
+    if (false == pwm_getPinFromChannelNum(i_rActionsContext.var1, PhysicalPin)) {
         THROW_ERROR();
         return; // error, means function failed to execute command
     }
@@ -40,18 +40,18 @@ static void pwm_cmnd_FADE_IN(actions_context_t &i_rActionsContext) {
     else
         analogWrite(PhysicalPin, i_rActionsContext.var2);
 }
-static void pwm_Panic( u8 i_PhysicalPin ) {
+static void pwm_Panic(u8 i_PhysicalPin) {
     analogWrite(i_PhysicalPin, 0);
 }
 
-static void pwm_cmnd_FADE_OUT(actions_context_t &i_rActionsContext) {
+static void pwm_cmnd_FADE_OUT(actions_context_t& i_rActionsContext) {
     u8 PhysicalPin;
-    if ( false == pwm_getPinFromChannelNum(i_rActionsContext.var1, PhysicalPin) ) {
-        pwm_Panic( PhysicalPin );
+    if (false == pwm_getPinFromChannelNum(i_rActionsContext.var1, PhysicalPin)) {
+        pwm_Panic(PhysicalPin);
         THROW_ERROR();
-        return ; // error, means function failed to execute command
+        return; // error, means function failed to execute command
     }
-    
+
     if (i_rActionsContext.var2 > 0)
         while (i_rActionsContext.var2 > 0) {
             i_rActionsContext.var2--;
@@ -61,45 +61,21 @@ static void pwm_cmnd_FADE_OUT(actions_context_t &i_rActionsContext) {
     else
         analogWrite(PhysicalPin, i_rActionsContext.var2);
 }
-static void pwm_cmnd_ON_RANDOM(actions_context_t &i_rActionsContext) {
+static void pwm_cmnd_ON_RANDOM(actions_context_t& i_rActionsContext) {
     u8 PhysicalPin;
-    if ( false == pwm_getPinFromChannelNum(i_rActionsContext.var1, PhysicalPin) ) {
-        pwm_Panic( PhysicalPin );
+    if (false == pwm_getPinFromChannelNum(i_rActionsContext.var1, PhysicalPin)) {
+        pwm_Panic(PhysicalPin);
         THROW_ERROR();
-        return ; // error, means function failed to execute command
+        return; // error, means function failed to execute command
     }
 
     i_rActionsContext.var2 = 128; // TODO: get random value here
     analogWrite(PhysicalPin, i_rActionsContext.var2);
 }
-static void pwm_cmnd_ON(actions_context_t &i_rActionsContext) {
+static void pwm_cmnd_ON(actions_context_t& i_rActionsContext) {
     u8 PhysicalPin;
-    if ( false == pwm_getPinFromChannelNum(i_rActionsContext.var1, PhysicalPin) ) {
-        pwm_Panic( PhysicalPin );
-        THROW_ERROR();
-        return ; // error, means function failed to execute command
-    }
-
-    i_rActionsContext.var2 = 0xFF;
-    analogWrite(PhysicalPin, i_rActionsContext.var2);
-}
-static void pwm_cmnd_OFF(actions_context_t &i_rActionsContext) {
-    u8 PhysicalPin;
-    if ( false == pwm_getPinFromChannelNum(i_rActionsContext.var1, PhysicalPin) ) {
-        pwm_Panic( PhysicalPin );
-        THROW_ERROR();
-        return ; // error, means function failed to execute command
-    }
-
-    i_rActionsContext.var2 = 0x0;
-    analogWrite(PhysicalPin, i_rActionsContext.var2);
-}
-
-// TODO: finish for all pins
-static void pwm_cmnd_ALL_ON(actions_context_t &i_rActionsContext) {
-    u8 PhysicalPin;
-    if ( false == pwm_getPinFromChannelNum(i_rActionsContext.var1, PhysicalPin) ) {
-        pwm_Panic( PhysicalPin );
+    if (false == pwm_getPinFromChannelNum(i_rActionsContext.var1, PhysicalPin)) {
+        pwm_Panic(PhysicalPin);
         THROW_ERROR();
         return; // error, means function failed to execute command
     }
@@ -107,35 +83,59 @@ static void pwm_cmnd_ALL_ON(actions_context_t &i_rActionsContext) {
     i_rActionsContext.var2 = 0xFF;
     analogWrite(PhysicalPin, i_rActionsContext.var2);
 }
-static void pwm_cmnd_ALL_OFF(actions_context_t &i_rActionsContext) {
+static void pwm_cmnd_OFF(actions_context_t& i_rActionsContext) {
     u8 PhysicalPin;
-    if ( false == pwm_getPinFromChannelNum(i_rActionsContext.var1, PhysicalPin) ) {
-        pwm_Panic( PhysicalPin );
+    if (false == pwm_getPinFromChannelNum(i_rActionsContext.var1, PhysicalPin)) {
+        pwm_Panic(PhysicalPin);
         THROW_ERROR();
-        return ; // error, means function failed to execute command
+        return; // error, means function failed to execute command
     }
-    
+
+    i_rActionsContext.var2 = 0x0;
+    analogWrite(PhysicalPin, i_rActionsContext.var2);
+}
+
+// TODO: finish for all pins
+static void pwm_cmnd_ALL_ON(actions_context_t& i_rActionsContext) {
+    u8 PhysicalPin;
+    if (false == pwm_getPinFromChannelNum(i_rActionsContext.var1, PhysicalPin)) {
+        pwm_Panic(PhysicalPin);
+        THROW_ERROR();
+        return; // error, means function failed to execute command
+    }
+
+    i_rActionsContext.var2 = 0xFF;
+    analogWrite(PhysicalPin, i_rActionsContext.var2);
+}
+static void pwm_cmnd_ALL_OFF(actions_context_t& i_rActionsContext) {
+    u8 PhysicalPin;
+    if (false == pwm_getPinFromChannelNum(i_rActionsContext.var1, PhysicalPin)) {
+        pwm_Panic(PhysicalPin);
+        THROW_ERROR();
+        return; // error, means function failed to execute command
+    }
+
     i_rActionsContext.var2 = 0x0;
     analogWrite(PhysicalPin, i_rActionsContext.var2);
 }
 
 void pwm_SetupChannel(u8 i_uLogChannel) {
-     u8 PhysicalPin;
-    if ( false == pwm_getPinFromChannelNum(i_uLogChannel, PhysicalPin) ) {
-        pwm_Panic( PhysicalPin );
+    u8 PhysicalPin;
+    if (false == pwm_getPinFromChannelNum(i_uLogChannel, PhysicalPin)) {
+        pwm_Panic(PhysicalPin);
         THROW_ERROR();
-        return ; // error, means function failed to execute command
+        return; // error, means function failed to execute command
     }
-        
+
     pinMode(PhysicalPin, OUTPUT);
     analogWrite(PhysicalPin, LOW);
 }
 
 void PWM_ModuleInit(void) {
-    _FOR( channel, 0, PWM_NUM_OF_AVAIL_CHANNELS)
+    _FOR(channel, 0, PWM_NUM_OF_AVAIL_CHANNELS)
         pwm_SetupChannel(channel);
 
-    PIN_RegisterPins( pwm_getPinFromChannelNum, PWM_NUM_OF_AVAIL_CHANNELS, F("PWM"));
+    PIN_RegisterPins(pwm_getPinFromChannelNum, PWM_NUM_OF_AVAIL_CHANNELS, F("PWM"));
 }
 
 /**
@@ -147,7 +147,7 @@ void PWM_ModuleInit(void) {
  * random value in channel "A" for NS secs Px6xxxNS - Set random value in
  * all channels for NS secs
  */
-bool PWM_ExecuteCommand(const state_t &s) {
+bool PWM_ExecuteCommand(const state_t& s) {
 
     actions_t Actions; //{bin_ChannelTurnON, bin_ChannelTurnOFF};
     actions_context_t ActionsContext;
@@ -214,7 +214,7 @@ bool PWM_ExecuteCommand(const state_t &s) {
  * all channels for NS secs P8Axxxyy - Reset channel "A" to default state
  * P9Axxxyy - Reset all channels to default state
  */
-bool decode_CMND_P(const byte *payload, state_t &s) {
+bool decode_CMND_P(const byte* payload, state_t& s) {
     s.command = (*payload++) - '0';     // [0..8] - command
     s.c.p.channel = (*payload++) - '0'; // [0..9] - Channel
 
@@ -228,7 +228,7 @@ bool decode_CMND_P(const byte *payload, state_t &s) {
 
     bool sanity_ok = false;
 
-    if ( true == pwm_getPinFromChannelNum(s.c.p.channel, s.c.p.pin) ) {
+    if (true == pwm_getPinFromChannelNum(s.c.p.channel, s.c.p.pin)) {
         s.sum = (*payload++) - '0'; // sum = 1
 
         if (s.command >= 0 && s.command <= CMND_PWM_MAX_VALUE)
@@ -242,16 +242,16 @@ bool decode_CMND_P(const byte *payload, state_t &s) {
     // Info display
 #if 1==DEBUG_LOCAL
     u8 i = s.c.p.channel;
-    String str( F( "PWM: channel: ") );
+    String str(F("PWM: channel: "));
     str += i;
-    str += F( ", Cmd: " );
+    str += F(", Cmd: ");
     i = (s.command);
     str += i;
-    str += F( ", Sanity: " );
+    str += F(", Sanity: ");
     str += sanity_ok;
-    str += F( ", Secs: " );
+    str += F(", Secs: ");
     str += (s.count);
-    str += F( ", Sum: " );
+    str += F(", Sum: ");
     str += (s.sum + '0');
     //DEBLN(str);
     MosqClient.publish(MQTT_DEBUG, str.c_str());

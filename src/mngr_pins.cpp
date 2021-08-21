@@ -64,8 +64,9 @@ static bool doCheckIfNewModIsOk(getPhysicalPinFromLogical_f i_fTransform,
 bool PIN_RegisterPins(getPhysicalPinFromLogical_f i_fTransform, int i_Count,
     const __FlashStringHelper* i_pModule,
     int i_LogicalFirstPin) {
+        
     if (false == doCheckIfNewModIsOk(i_fTransform, i_Count, i_pModule, i_LogicalFirstPin))
-        return (false);
+        return false;
 
     if (count_pin_groups < MAX_PIN_ASSIGNMENTS) {
         PINS[count_pin_groups].m_Fun = i_fTransform;
@@ -73,10 +74,10 @@ bool PIN_RegisterPins(getPhysicalPinFromLogical_f i_fTransform, int i_Count,
         PINS[count_pin_groups].m_log_first_pin = i_LogicalFirstPin;
         PINS[count_pin_groups].m_module_name = i_pModule;
         count_pin_groups++;
-        return (true);
+        return true;
     }
     else
-        return (false);
+        return false;
 }
 
 void PIN_DisplayAssignments(void) {
