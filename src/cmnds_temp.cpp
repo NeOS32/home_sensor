@@ -6,11 +6,9 @@
 
 #if 1 == N32_CFG_TEMP_ENABLED
 
-#define DEFAULT_DELAY_FOR_CONVERSION_IN_S 5
+static debug_level_t uDebugLevel = DEBUG_LOG;
 
-#ifdef DEBUG
-#define DEBUG_LOCAL 0
-#endif
+#define DEFAULT_DELAY_FOR_CONVERSION_IN_S 5
 
 #define TEMP_MIN (-100)
 #define TEMP_MAX (99)
@@ -26,7 +24,7 @@ static void handler_UpdateSensorsAddr(void) {
             continue;
 
         if (OneWire::crc8(address, 7) != address[7])
-            break; // Serial.println(F("Bad address!"));
+            break; // DEBLN(F("Bad address!"));
 
         String stringAddr;
         char hexBuf[4];
@@ -35,13 +33,8 @@ static void handler_UpdateSensorsAddr(void) {
             stringAddr += hexBuf;
             if (i < 7)
                 stringAddr += F(",");
-
-            Serial.print(F("0x"));
-            Serial.print(address[i], HEX);
-            if (i < 7)
-                Serial.print(F(", "));
         }
-        Serial.print(F("\n"));
+        DEB_L(stringAddr);
 
         MosqClient.publish(MQTT_SENSORS_ADDR, stringAddr.c_str());
     }
@@ -67,26 +60,23 @@ static void HANDLER_OneWire(void) {
             MosqClient.publish(stringPath.c_str(), stringTemp.c_str());
             DEBLN(stringTemp);
 
-#if 1 == DEBUG_LOCAL
-            String str(F(" 1-Wire: i="));
-            str += i;
-            str += F(", Tprev=");
-            str += temperature_prev;
-            str += F(", T=");
-            str += temperature;
-            DEBLN(str);
-            MosqClient.publish(MQTT_DEBUG, str.c_str());
-            DEBLN(stringPath + " : " + stringTemp);
-#endif // DEBUG_LOCAL
+            IF_DEB_L() {
+                String str(F(" 1-Wire: i="));
+                str += i;
+                str += F(", Tprev=");
+                str += temperature_prev;
+                str += F(", T=");
+                str += temperature;
+                DEBLN(str);
+                MosqClient.publish(MQTT_DEBUG, str.c_str());
+                DEBLN(stringPath + " : " + stringTemp);
+            }
         }
 
         ds18b20_sensors.doConversion();
     }
-    else {
-#if 1 == DEBUG_LOCAL
-        DEBLN(F(" No Temp sensors found!"));
-#endif // DEBUG_LOCAL
-    }
+    else
+        DEB_W(F(" No Temp sensors found!"));
 }
 
 static void temp_AlarmFun(void) { HANDLER_OneWire(); }
@@ -143,7 +133,7 @@ static void temp_SendResults(actions_context_t& i_rActionsContext) {
         stringTemp += temperature;
         MosqClient.publish(stringPath.c_str(), stringTemp.c_str());
 
-        DEBLN(stringPath + F(" : ") + stringTemp);
+        DEB_L(stringPath + F(" : ") + stringTemp);
     }
 }
 
@@ -207,19 +197,19 @@ bool decode_CMND_T(const byte* payload, state_t& s) {
                 sanity_ok = true;
 
     // Info display
-#if 1 == DEBUG_LOCAL
-    u8 i = s.c.t.channel;
-    String str(F("TEMP: channel: "));
-    str += i;
-    str += F(", Cmd: ");
-    i = (s.command);
-    str += i;
-    str += F(", Sanity: ");
-    str += sanity_ok;
-    str += F(", Sum: ");
-    str += (s.sum + '0');
-    DEBLN(str);
-#endif // DEBUG_LOCAL
+    IF_DEB_L() {
+        u8 i = s.c.t.channel;
+        String str(F("TEMP: channel: "));
+        str += i;
+        str += F(", Cmd: ");
+        i = (s.command);
+        str += i;
+        str += F(", Sanity: ");
+        str += sanity_ok;
+        str += F(", Sum: ");
+        str += (s.sum + '0');
+        DEBLN(str);
+    }
 
     return (sanity_ok);
 }

@@ -6,9 +6,7 @@
 
 #if 1 == N32_CFG_BIN_OUT_ENABLED
 
-#ifdef DEBUG
-#define DEBUG_LOCAL 1
-#endif
+static debug_level_t uDebugLevel = DEBUG_WARN;
 
 #define BIN_MAX (0xFF)
 
@@ -41,28 +39,28 @@ static void binout_ChannelTurnON(actions_context_t& i_rActionsContext) {
     // BIN_NUM_OF_DEFAULT_HIGH_CHANNELS, default is state LOW, so turning it ON
     // means, setting pin to "HIGH"
 
-#if 1==DEBUG_LOCAL
-    String str(F("BIN: turn_on Channel="));
-    str += i_rActionsContext.var1;
-    str += F(", Pin=");
-    str += i_rActionsContext.var2;
-    str += F(", Slot=");
-    str += i_rActionsContext.slot;
-    //DEBLN(str);
-    MosqClient.publish(MQTT_DEBUG, str.c_str());
-#endif // DEBUG_LOCAL
+    IF_DEB_L() {
+        String str(F("BIN: turn_on Channel="));
+        str += i_rActionsContext.var1;
+        str += F(", Pin=");
+        str += i_rActionsContext.var2;
+        str += F(", Slot=");
+        str += i_rActionsContext.slot;
+        //DEBLN(str);
+        MosqClient.publish(MQTT_DEBUG, str.c_str());
+    }
 
     u8 PhysicalPinBum;
     if (false == binout_getPinFromChannelNum(i_rActionsContext.var1, PhysicalPinBum)) {
+        DEB_W(F("BIN: wrong ch number!\n"));
         THROW_ERROR();
-        DEBLN(F("BIN: wrong ch number!"));
         return;
     }
 
     if ((i_rActionsContext.var1 >= BIN_OUT_NUM_OF_AVAIL_CHANNELS) ||
         (PhysicalPinBum != i_rActionsContext.var2)) {
+        DEB_W(F("BIN: wrong ch number!\n"));
         THROW_ERROR();
-        DEBLN(F("BIN: wrong ch number!"));
         return;
     }
 
@@ -74,28 +72,28 @@ static void binout_ChannelTurnON(actions_context_t& i_rActionsContext) {
 };
 
 static void binout_ChannelTurnOFF(actions_context_t& i_rActionsContext) {
-#if 1==DEBUG_LOCAL
-    String str(F("BIN: turn_off Channel="));
-    str += i_rActionsContext.var1;
-    str += F(", Pin=");
-    str += i_rActionsContext.var2;
-    str += F(", Slot=");
-    str += i_rActionsContext.slot;
-    //DEBLN(str);
-    MosqClient.publish(MQTT_DEBUG, str.c_str());
-#endif // DEBUG_LOCAL
+    IF_DEB_L() {
+        String str(F("BIN: turn_off Channel="));
+        str += i_rActionsContext.var1;
+        str += F(", Pin=");
+        str += i_rActionsContext.var2;
+        str += F(", Slot=");
+        str += i_rActionsContext.slot;
+        //DEBLN(str);
+        MosqClient.publish(MQTT_DEBUG, str.c_str());
+    }
 
     u8 PhysicalPinBum;
     if (false == binout_getPinFromChannelNum(i_rActionsContext.var1, PhysicalPinBum)) {
+        DEB_W(F("BIN: wrong ch number!\n"));
         THROW_ERROR();
-        DEBLN(F("BIN: wrong ch number!"));
         return;
     }
 
     if ((i_rActionsContext.var1 >= BIN_OUT_NUM_OF_AVAIL_CHANNELS) ||
         (PhysicalPinBum != i_rActionsContext.var2)) {
+        DEB_W(F("BIN: wrong ch number!\n"));
         THROW_ERROR();
-        DEBLN(F("BIN: wrong ch number!"));
         return;
     }
 
@@ -193,22 +191,22 @@ bool decode_CMND_B(const byte* payload, state_t& s) {
 
 ERROR:
     // Info display
-#if 1==DEBUG_LOCAL
-    u8 i = s.c.b.channel;
-    String str(F("BIN: channel: "));
-    str += i;
-    str += F(", Cmd: ");
-    i = s.command + '0';
-    str += i;
-    str += F(", Sanity: ");
-    str += sanity_ok;
-    str += F(", Secs: ");
-    str += (s.count + '0');
-    str += F(", Sum: ");
-    i = s.sum + '0';
-    str += i;
-    DEBLN(str);
-#endif // DEBUG_LOCAL
+    IF_DEB_L() {
+        u8 i = s.c.b.channel;
+        String str(F("BIN: channel: "));
+        str += i;
+        str += F(", Cmd: ");
+        i = s.command + '0';
+        str += i;
+        str += F(", Sanity: ");
+        str += sanity_ok;
+        str += F(", Secs: ");
+        str += (s.count + '0');
+        str += F(", Sum: ");
+        i = s.sum + '0';
+        str += i;
+        DEBLN(str);
+    }
 
     return (sanity_ok);
 }

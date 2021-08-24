@@ -11,26 +11,30 @@
 static void handler_Ethernet(void) { Ethernet.maintain(); }
 
 void digitalClockDisplay() {
-    // digital clock display of the time
-    Serial.print(hour());
+    //digital clock display of the time
+#if 1 == N32_SERIAL_ENABLED
+    DEB(hour());
     printDigits(minute());
     printDigits(second());
-    Serial.print( F(" "));
-    Serial.print(day());
-    Serial.print(F(" "));
-    Serial.print(month());
-    Serial.print(F(" "));
-    Serial.print(year());
-    Serial.println();
+    DEB( F(" "));
+    DEB(day());
+    DEB(F(" "));
+    DEB(month());
+    DEB(F(" "));
+    DEB(year());
+    DEBLN();
+#endif
 }
 
 void printDigits(int digits) {
     // utility function for digital clock display: prints preceding colon and
     // leading 0
-    Serial.print( F(":"));
+#if 1 == N32_SERIAL_ENABLED
+    DEB( F(":"));
     if (digits < 10)
-        Serial.print( '0');
-    Serial.print(digits);
+        DEB( '0');
+    DEB(digits);
+#endif
 }
 
 void loop() {
@@ -49,7 +53,7 @@ void loop() {
 
     // MQTT section
     if (!MosqClient.connected())
-        reconnect();
+        MQTT_reconnect();
     MosqClient.loop();
 
     handler_Ethernet();

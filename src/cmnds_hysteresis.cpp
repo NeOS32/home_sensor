@@ -32,11 +32,7 @@
 // 25C - 10k + 15K => 25K | 10/25 x/1024 => x= 10240/25= 410
 // 627/1024  9900/x => x= 9900 * 1024 / 636 = 16k3
 
-static debug_level_t uDebugLevel = DEBUG_TRACE;
-#define MY_DEBUG 1
-#if 1==MY_DEBUG
-#define DEBUG_LOCAL 1
-#endif
+static debug_level_t uDebugLevel = DEBUG_WARN;
 
 #define HIST_SLOT_ALLOCATED 1
 
@@ -78,11 +74,11 @@ static bool hyst_activateSlot(hist_slot_number_t i_SlotNumber) {
 
     if (true == hyst_isSlotActive(i_SlotNumber))
         IF_DEB_W() {
-        String str = F(" WARN: hist: slot=");
-        str += i_SlotNumber;
-        str += F(" has already been activated!");
-        MosqClient.publish(MQTT_DEBUG, str.c_str());
-    }
+            String str = F(" WARN: hist: slot=");
+            str += i_SlotNumber;
+            str += F(" has already been activated!");
+            MosqClient.publish(MQTT_DEBUG, str.c_str());
+        }
 
     HIST_States[i_SlotNumber].temp_low = HIST_States[i_SlotNumber].temp_high = 0;
     HIST_States[i_SlotNumber].time_end = 0;
@@ -138,8 +134,6 @@ void HYSTERESIS_ModuleInit(void) {
     PIN_RegisterPins(hyst_getPinFromChannelNum, HIST_NUM_OF_AVAIL_CHANNELS, F("HYST_OUT"));
 
     _FOR(i, 0, HIST_NUM_OF_AVAIL_CHANNELS) {
-        //HIST_States[i].pin_bin_out = 0;
-        //HIST_States[i].channel = 0;
         HIST_States[i].state = 0;
         HIST_States[i].temp_low = 0;
         HIST_States[i].temp_high = 0;
@@ -162,14 +156,14 @@ static u32 getTempBasedOnR(u32 Rdev) {
     memcpy_P(&v_max, &hist_data[0], 4);
     memcpy_P(&v_min, &hist_data[HYST_R_STEPS_COUNT - 1], 4);
 
-    /*IF_DEB_T() {
+    IF_DEB_T() {
         String str(" flash T read: v_min=");
         str += v_min;
         str += ", v_max=";
         str += v_max;
         // DEBLN(str);
         MosqClient.publish(MQTT_DEBUG, str.c_str());
-    }*/
+    }
 
     // normalization
     u32 r = constrain(Rdev, HYST_R_MIN, HYST_R_MAX);
@@ -185,16 +179,16 @@ static u32 getTempBasedOnR(u32 Rdev) {
             memcpy_P(&v_max, &hist_data[step], 4);
 
             u32 ret = (v_min + v_max) >> 1;
-            /*     IF_DEB_T() {
-                             String str("  ret: v_min=");
-                             str += v_min;
-                             str += ", v_max=";
-                             str += v_max;
-                             str += ", ret=";
-                             str += ret;
-                             // DEBLN(str);
-                             MosqClient.publish(MQTT_DEBUG, str.c_str());
-                 }*/
+            IF_DEB_T() {
+                String str("  ret: v_min=");
+                str += v_min;
+                str += ", v_max=";
+                str += v_max;
+                str += ", ret=";
+                str += ret;
+                // DEBLN(str);
+                MosqClient.publish(MQTT_DEBUG, str.c_str());
+            }
 
             return (ret);
         }
@@ -215,20 +209,20 @@ u32 HYSTERESIS_getTempScaled(u8 i_SlotNumber) {
     u32 Rall = (u32)(HIST_RESISTANCE_TO_GND << 10) / adc;
     u32 Rdev = Rall - HIST_RESISTANCE_TO_GND;
 
-    //IF_DEB_L() {
-    String str(F(" HYST_getTemp: adc="));
-    str += adc;
-    str += F(", Rall=");
-    str += Rall;
-    str += F(", R2g=");
-    str += HIST_RESISTANCE_TO_GND;
-    str += F(", Rdev=");
-    str += Rdev;
-    str += F(", Temp=");
-    str += ((u32)getTempBasedOnR(Rdev));
-    // DEBLN(str);
-    MosqClient.publish(MQTT_DEBUG, str.c_str());
-    //}
+    IF_DEB_L() {
+        String str(F(" HYST_getTemp: adc="));
+        str += adc;
+        str += F(", Rall=");
+        str += Rall;
+        str += F(", R2g=");
+        str += HIST_RESISTANCE_TO_GND;
+        str += F(", Rdev=");
+        str += Rdev;
+        str += F(", Temp=");
+        str += ((u32)getTempBasedOnR(Rdev));
+        // DEBLN(str);
+        MosqClient.publish(MQTT_DEBUG, str.c_str());
+    }
 
     return (getTempBasedOnR(Rdev));
 }
@@ -266,14 +260,13 @@ static void hist_EmergencyShutdown(void) {
 static bool hist_ShutDownChannel(hist_slot_number_t i_SlotNumber) {
     if (false == hyst_isSlotActive(i_SlotNumber))
         IF_DEB_W() {
-        String str(F(" WARN: hist: slot "));
-        str += i_SlotNumber;
-        str += F(" not active, while shutting down");
-        MosqClient.publish(MQTT_DEBUG, str.c_str());
-    }
+            String str(F(" WARN: hist: slot "));
+            str += i_SlotNumber;
+            str += F(" not active, while shutting down");
+            MosqClient.publish(MQTT_DEBUG, str.c_str());
+        }
 
     u8 PhysicalPin;
-    //if ( false == hyst_getPinFromChannelNum(HIST_States[i_SlotNumber].channel, PhysicalPin) ) {
     if (false == hyst_getPinFromChannelNum(i_SlotNumber, PhysicalPin)) {
         THROW_ERROR();
         DEBLN(F("BIN: wrong ch number!"));
@@ -355,11 +348,11 @@ static void hyst_StartProcess(actions_context_t& i_rActionsContext) {
     hist_slot_number_t slot = i_rActionsContext.var1;
     if (true == hyst_isSlotActive(slot))
         IF_DEB_W() {
-        String str(F(" WARN: hist: slot="));
-        str += slot;
-        str += F(" has already been started!");
-        MosqClient.publish(MQTT_DEBUG, str.c_str());
-    }
+            String str(F(" WARN: hist: slot="));
+            str += slot;
+            str += F(" has already been started!");
+            MosqClient.publish(MQTT_DEBUG, str.c_str());
+        }
 
     // finally, we're executing actual (possible) heating here
     hist_Control(slot);

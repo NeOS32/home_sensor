@@ -4,7 +4,7 @@
 
 #include "my_common.h"
 
-void reconnect() {
+void MQTT_reconnect() {
     DEB(F("Connecting to MQTT broker: "));
 
     // Attempt to connect
@@ -13,7 +13,7 @@ void reconnect() {
         // Once connected, publish an announcement...
         String str(MQTT_CLIENT_NAME);
         str += F(" - reconnected!");
-        MosqClient.publish(MQTT_ARD_DEVICES_CONTROL, str.c_str());
+        MosqClient.publish(MQTT_ARD_DEVICES_STATUS, str.c_str());
         // ... and resubscribe
         MosqClient.subscribe(MQTT_DEVICES_CMNDS);
     }

@@ -4,9 +4,7 @@
 
 #include "my_common.h"
 
-#ifdef DEBUG
-#define DEBUG_LOCAL 1
-#endif
+static debug_level_t uDebugLevel = DEBUG_WARN;
 
 void alarm_15s() {
 }
@@ -19,27 +17,25 @@ void alarm_30s() {
         String path_str(MQTT_SENSORS_ANALOG);
         path_str += i;
         MosqClient.publish(path_str.c_str(), tim_str.c_str());
-#if 1==DEBUG_LOCAL
-        DEBLN(tim_str);
-#endif // 1==DEBUG_LOCAL
+        DEB_L(tim_str);
     }
 #endif // 1==N32_CFG_ANALOG_IN_ENABLED
 
 #if 1==N32_CFG_HISTERESIS_ENABLED
     u32 tempScaled = HYSTERESIS_getTempScaled(0);
     u32 remainder = (tempScaled % 4096) * 10;
-#ifdef DEBUG_LOCAL
-    String str = F(" Ch0T=");
-    str += tempScaled >> 12;
-    str += F(".");
-    str += remainder >> 12;
-    str += F("C, Ch1T=");
-    str += HYSTERESIS_getTemp(1);
-    str += F("C");
-    MosqClient.publish(MQTT_DEBUG, str.c_str());
-    // DEBLN(tim_str);
-#endif
-    str = tempScaled >> 12;
+    IF_DEB_L() {
+        String str = F(" Ch0T=");
+        str += tempScaled >> 12;
+        str += F(".");
+        str += remainder >> 12;
+        str += F("C, Ch1T=");
+        str += HYSTERESIS_getTemp(1);
+        str += F("C");
+        MosqClient.publish(MQTT_DEBUG, str.c_str());
+        DEB_L(str);
+    }
+    String str( tempScaled >> 12 );
     str += F(".");
     str += remainder >> 12;
     String str1(MQTT_SENSORS_T);
@@ -68,7 +64,7 @@ static String retUpTime(void) {
     str += F(" hours, ");
     str += mins;
     str += F(" mins");
-    return (str);
+    return str;
 }
 
 static void timers_ShowErrors(void) {
@@ -123,12 +119,10 @@ void alarm_15m() {
     str += F(" ");
     str += __TIME__;
     if (false == MosqClient.publish(MQTT_DEV_STATE, str.c_str())) {
-        DEBLN(F("Failed with publishing! (probably to long)"));
+        DEB_W(F("Failed with publishing! (probably to long)"));
     }
 
-#if 1==DEBUG_LOCAL
-    DEBLN(str);
-#endif
+    DEB_L(str);
 }
 
 void alarm_1h() {

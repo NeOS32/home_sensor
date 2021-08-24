@@ -6,9 +6,7 @@
 
 #if 1 == N32_CFG_BIN_IN_ENABLED
 
-#ifdef DEBUG
-#define DEBUG_LOCAL 1
-#endif
+static debug_level_t uDebugLevel = DEBUG_WARN;
 
 #define BIN_MAX (0xFF)
 #define BIN_IN_CHECK_INTERVAL_IN_SECS (1)
@@ -92,9 +90,7 @@ static bool bin_in_UpdateStatus(bool i_bForced = false) {
         stringPath += F("state");
         MosqClient.publish(stringPath.c_str(), strOut.c_str());
 
-#if 1==DEBUG_LOCAL
-        DEBLN(strOut);
-#endif // DEBUG_LOCAL
+        DEB_L(strOut);
 
         prev_mask = current_mask;
     }
@@ -157,13 +153,13 @@ bool decode_CMND_I(const byte* payload, state_t& s) {
             sanity_ok = true;
 
     // Info display
-#ifdef DEBUG_LOCAL
-    String str(F("BIN IN: update, "));
-    str += F(", Sum: ");
-    u8 i = s.sum + '0';
-    str += i;
-    DEBLN(str);
-#endif // DEBUG_LOCAL
+    IF_DEB_L() {
+        String str(F("BIN IN: update, "));
+        str += F(", Sum: ");
+        u8 i = s.sum + '0';
+        str += i;
+        DEBLN(str);
+    }
 
     return (sanity_ok);
 }
