@@ -4,9 +4,7 @@
 
 #include "my_common.h"
 
-#ifdef DEBUG
-#define DEBUG_LOCAL 1
-#endif
+static debug_level_t uDebugLevel = DEBUG_WARN;
 
 static void handler_Ethernet(void) { Ethernet.maintain(); }
 
@@ -16,7 +14,7 @@ void digitalClockDisplay() {
     DEB(hour());
     printDigits(minute());
     printDigits(second());
-    DEB( F(" "));
+    DEB(F(" "));
     DEB(day());
     DEB(F(" "));
     DEB(month());
@@ -30,48 +28,60 @@ void printDigits(int digits) {
     // utility function for digital clock display: prints preceding colon and
     // leading 0
 #if 1 == N32_SERIAL_ENABLED
-    DEB( F(":"));
+    DEB(F(":"));
     if (digits < 10)
-        DEB( '0');
+        DEB('0');
     DEB(digits);
 #endif
 }
 
+
 void loop() {
+    static time_t prev_t;
+
 #if 1==N32_CFG_WATCHDOG_ENABLED
     wdt_reset();
 #endif // N32_CFG_WATCHDOG_ENABLED
 
-    // TIME handling section
-    time_t t = now(); // blocking funtion, that eventually calls NTP for curret
-                      // time (via getNtpTime())
-    static time_t prev_t;
+    IF_DEB_L() {
+        static u32 i = 0;
+        i++;
+        if (i % 20 == 0)
+            MosqClient.publish(MQTT_DEBUG, String(F("Tick!")).c_str());
+    }
 
-#if 1==DEBUG_LOCAL
-    // DEBLN("Tick!");
-#endif // DEBUG_LOCAL
+#if 1==N32_CFG_ETH_ENABLED
+    // low level ethernet section
+    handler_Ethernet();
+#endif // N32_CFG_ETH_ENABLED
 
     // MQTT section
     if (!MosqClient.connected())
         MQTT_reconnect();
-    MosqClient.loop();
+    else
+        MosqClient.loop();
 
-    handler_Ethernet();
+    // TIME handling section
+    time_t t = now(); // blocking funtion, that eventually calls NTP for curret
+                      // time (via getNtpTime())
 
     // we just want to check it once a second
     if (prev_t != t) {
         TIMER_ProcessAllTimers();
 
         if (timeStatus() != timeSet) {
-#if 1==DEBUG_LOCAL
-            MosqClient.publish( MQTT_DEBUG, String(F( "ERR: NTP: time not fetched!") ).c_str() );
-#endif // DEBUG_LOCAL
-        } else {
-            // digitalClockDisplay();
+            IF_DEB_W() {
+                MosqClient.publish(MQTT_DEBUG, String(F("ERR: NTP: time not fetched!")).c_str());
+            }
+        }
+        else {
+            IF_DEB_T() {
+                digitalClockDisplay();
+            }
 
             // UpTime updated
-            if (0x0 == timeUpTime)
-                timeUpTime = now();
+            if (0x0 == gUpTime)
+                gUpTime = now();
         }
 
         prev_t = t;

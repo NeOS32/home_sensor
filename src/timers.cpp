@@ -4,7 +4,7 @@
 
 #include "my_common.h"
 
-static debug_level_t uDebugLevel = DEBUG_WARN;
+static debug_level_t uDebugLevel = DEBUG_TRACE;
 
 void alarm_15s() {
 }
@@ -49,7 +49,7 @@ void alarm_30s() {
 #define _HOUR ((u32)60 * _MIN)
 #define _DAY ((u32)24 * _HOUR)
 static String retUpTime(void) {
-    time_t diff = now() - timeUpTime;
+    time_t diff = now() - gUpTime;
     u32 days = diff / _DAY;
     diff -= days * _DAY;
     u32 hours = diff / _HOUR;
@@ -112,7 +112,7 @@ void alarm_2m() {
 // the broker
 void alarm_15m() {
     String str(MQTT_CLIENT_NAME);
-    str += F(": Ver:");
+    str += F(": ");
     str += APP_VERSION;
     str += F(", BuildTime: ");
     str += __DATE__;

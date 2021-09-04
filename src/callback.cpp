@@ -4,10 +4,7 @@
 
 #include "my_common.h"
 
-#define DEBUG_LOCAL 1
-#ifdef DEBUG
-#define DEBUG_LOCAL 1
-#endif
+static debug_level_t uDebugLevel = DEBUG_LOG;
 
 #if 1 == N32_CFG_VALVE_ENABLED
 static void turn_off_valve(unsigned int channel, unsigned int valve) {
@@ -237,14 +234,14 @@ u8 getDecodedChannelNum(u8 uRawNumber) {
 void MQTT_callback(char* topic, byte* payload, unsigned int length) {
     bool msg_accepted = false;
 
-#if 1 == DEBUG_LOCAL
-    DEB(F("Msg received ["));
-    DEB(topic);
-    DEB(F("] '"));
-    _FOR(i, 0, (int)length)
-        DEB((char)payload[i]);
-    DEBLN(F("'"));
-#endif
+    IF_DEB_L() {
+        DEB(F("Msg received ["));
+        DEB(topic);
+        DEB(F("] '"));
+        _FOR(i, 0, (int)length)
+            DEB((char)payload[i]);
+        DEB(F("'\n"));
+    }
 
     // do we have a match?
     if (0 == strcmp(MQTT_DEVICES_CMNDS, topic)) {
@@ -297,7 +294,7 @@ void MQTT_callback(char* topic, byte* payload, unsigned int length) {
 #endif // N32_CFG_TEMP_ENABLED
 
         default:
-            DEBLN(F(" - unknown action command - ignored!"));
+            DEB_L(F(" - unknown action command - ignored!"));
             break;
         }
 
@@ -309,9 +306,9 @@ void MQTT_callback(char* topic, byte* payload, unsigned int length) {
             }
         }
         else
-            DEBLN(F(" - failed, message ignored!"));
+            DEB_W(F(" - failed, message ignored!"));
     }
     else {
-        DEB(" ignored!");
+        DEB_T(F(" ignored!"));
     }
 }
