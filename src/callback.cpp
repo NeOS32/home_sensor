@@ -26,10 +26,10 @@ static void turn_off_valve(unsigned int channel, unsigned int valve) {
         delay(VALVE_SWITCH_DELAY_MS);              // aits DELAY_MS_SEQ ms
         digitalWrite(VALVE_SWITCH_DELAY_MS, HIGH); // sets the digital pin 13 on
 
-        MosqClient.publish(MQTT_DEV_STATE, "Backup pin turned off!");
+        MSG_Publish(MQTT_DEV_STATE, "Backup pin turned off!");
     }
 
-    MosqClient.publish(MQTT_DEV_STATE, str.c_str()); // extra debug
+    MSG_Publish(MQTT_DEV_STATE, str.c_str()); // extra debug
 }
 
 static void turn_on_valve(unsigned int channel, unsigned int valve) {
@@ -46,13 +46,13 @@ static void turn_on_valve(unsigned int channel, unsigned int valve) {
         digitalWrite(VALVE_SWITCH_DELAY_MS, LOW); // sets the digital pin 13 on
         delay(VALVE_SWITCH_DELAY_MS); // aits VALVE_SWITCH_DELAY_MS ms
 
-        MosqClient.publish(MQTT_DEV_STATE, "Backup pin turned on!");
+        MSG_Publish(MQTT_DEV_STATE, "Backup pin turned on!");
     }
     digitalWrite(channel, LOW);   // sets the digital pin 13 on
     delay(VALVE_SWITCH_DELAY_MS); // aits VALVE_SWITCH_DELAY_MS ms
     digitalWrite(valve, LOW);     // sets the digital pin 13 on
 
-    MosqClient.publish(MQTT_DEV_STATE, str.c_str()); // extra debug
+    MSG_Publish(MQTT_DEV_STATE, str.c_str()); // extra debug
 }
 
 static void set_valve_state_for_time(const state_t& s, boolean mode = INPUT) {
@@ -152,48 +152,6 @@ static bool decode_CMND_Z(const byte* payload, state_t& s) {
 }
 #endif // N32_CFG_VALVE_ENABLED
 
-static bool executeCmnd(state_t& s) {
-    switch (s.action) {
-#if 1 == N32_CFG_VALVE_ENABLED
-    case 'Z': // Valve
-        return (set_valve_state_for_time(s));
-#endif // N32_CFG_VALVE_ENABLED
-
-#if 1 == N32_CFG_PWM_ENABLED
-    case 'P': // PWM
-        return (PWM_ExecuteCommand(s));
-#endif // N32_CFG_PWM_ENABLED
-
-#if 1 == N32_CFG_LED_W2918_ENABLED
-    case 'L': // LED
-        return (LED_ExecuteCommand(s));
-#endif // N32_CFG_LED_W2918_ENABLED
-
-#if 1 == N32_CFG_BIN_OUT_ENABLED
-    case 'B': // Bin OUT
-        return (BIN_OUT_ExecuteCommand(s));
-#endif // N32_CFG_BIN_OUT_ENABLED
-
-#if 1 == N32_CFG_BIN_IN_ENABLED
-    case 'I': // Bin IN
-        return (BIN_IN_ExecuteCommand(s));
-#endif // N32_CFG_BIN_IN_ENABLED
-
-#if 1 == N32_CFG_TEMP_ENABLED
-    case 'T': // TEMP
-        return (TEMP_ExecuteCommand(s));
-#endif // N32_CFG_TEMP_ENABLED
-
-#if 1 == N32_CFG_HISTERESIS_ENABLED
-    case 'H': // HYST
-        return (HYST_ExecuteCommand(s));
-#endif // N32_CFG_HISTERESIS_ENABLED
-
-    default:
-        return (false);
-    }
-}
-
 u32 getSecondsFromNumberAndScale(char number, char scale) {
     if ((number > 9) || (number < 0))
         number = 0;
@@ -229,86 +187,4 @@ u8 getDecodedChannelNum(u8 uRawNumber) {
         return (10 + uRawNumber);
 
     return (CMNDS_NULL); // FAILED
-}
-
-void MQTT_callback(char* topic, byte* payload, unsigned int length) {
-    bool msg_accepted = false;
-
-    IF_DEB_L() {
-        DEB(F("Msg received ["));
-        DEB(topic);
-        DEB(F("] '"));
-        _FOR(i, 0, (int)length)
-            DEB((char)payload[i]);
-        DEB(F("'\n"));
-    }
-
-    // do we have a match?
-    if (0 == strcmp(MQTT_DEVICES_CMNDS, topic)) {
-        state_t s;
-
-        // command processing
-        s.action = *payload++; // ACTION
-
-        switch (s.action) {
-#if 1 == N32_CFG_VALVE_ENABLED
-        case 'Z': // valve
-            decode_CMND_Z(payload, s);
-            break;
-#endif // N32_CFG_VALVE_ENABLED
-
-#if 1 == N32_CFG_PWM_ENABLED
-        case 'P': // PWM
-            msg_accepted = decode_CMND_P(payload, s);
-            break;
-#endif // N32_CFG_PWM_ENABLED
-
-#if 1 == N32_CFG_HISTERESIS_ENABLED
-        case 'H': // HYST
-            msg_accepted = decode_CMND_H(payload, s);
-            break;
-#endif // N32_CFG_HISTERESIS_ENABLED
-
-#if 1 == N32_CFG_BIN_OUT_ENABLED
-        case 'B': // BIN OUT
-            msg_accepted = decode_CMND_B(payload, s);
-            break;
-#endif // N32_CFG_BIN_OUT_ENABLED
-
-#if 1 == N32_CFG_BIN_IN_ENABLED
-        case 'I': // BIN IN
-            msg_accepted = decode_CMND_I(payload, s);
-            break;
-#endif // N32_CFG_BIN_IN_ENABLED
-
-#if 1 == N32_CFG_LED_W2918_ENABLED
-        case 'L': // LED
-            msg_accepted = decode_CMND_L(payload, s);
-            break;
-#endif // N32_CFG_LED_W2918_ENABLED
-
-#if 1 == N32_CFG_TEMP_ENABLED
-        case 'T': // TEMP
-            msg_accepted = decode_CMND_T(payload, s);
-            break;
-#endif // N32_CFG_TEMP_ENABLED
-
-        default:
-            DEB_L(F(" - unknown action command - ignored!"));
-            break;
-        }
-
-        if (true == msg_accepted) {
-            // DEBLN(" - OK!");
-            if (false == executeCmnd(s)) {
-                // DEBLN(str);
-                MosqClient.publish(MQTT_DEBUG, " cmnd execution failed!");
-            }
-        }
-        else
-            DEB_W(F(" - failed, message ignored!"));
-    }
-    else {
-        DEB_T(F(" ignored!"));
-    }
 }

@@ -47,7 +47,7 @@ void loop() {
         static u32 i = 0;
         i++;
         if (i % 20 == 0)
-            MosqClient.publish(MQTT_DEBUG, String(F("Tick!")).c_str());
+            MSG_Publish(MQTT_DEBUG, String(F("Tick!")).c_str());
     }
 
 #if 1==N32_CFG_ETH_ENABLED
@@ -56,10 +56,10 @@ void loop() {
 #endif // N32_CFG_ETH_ENABLED
 
     // MQTT section
-    if (!MosqClient.connected())
+    if (!gClient_Mosq.connected())
         MQTT_reconnect();
     else
-        MosqClient.loop();
+        gClient_Mosq.loop();
 
     // TIME handling section
     time_t t = now(); // blocking funtion, that eventually calls NTP for curret
@@ -71,7 +71,7 @@ void loop() {
 
         if (timeStatus() != timeSet) {
             IF_DEB_W() {
-                MosqClient.publish(MQTT_DEBUG, String(F("ERR: NTP: time not fetched!")).c_str());
+                MSG_Publish(MQTT_DEBUG, String(F("ERR: NTP: time not fetched!")).c_str());
             }
         }
         else {

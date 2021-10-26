@@ -49,7 +49,7 @@ static bool doCheckIfNewModIsOk(getPhysicalPinFromLogical_f i_fTransform,
                     str += F("'), have already been registered with module: 'Name='");
                     str += PINS[i].m_module_name;
                     str += F("'\n");
-                    MosqClient.publish(String(MQTT_DEBUG).c_str(), str.c_str());
+                    MSG_Publish(String(MQTT_DEBUG).c_str(), str.c_str());
 #if 1 == DEBUG_LOCAL
                     DEBLN(str);
 #endif
@@ -85,7 +85,7 @@ void PIN_DisplayAssignments(void) {
 
     {
         String str_header(F("Pin assignments:\n-=-=-=-=-="));
-        MosqClient.publish(String(MQTT_DEBUG).c_str(), str_header.c_str());
+        MSG_Publish(String(MQTT_DEBUG).c_str(), str_header.c_str());
 #if 1 == DEBUG_LOCAL
         DEBLN(str_header);
 #endif
@@ -114,7 +114,7 @@ void PIN_DisplayAssignments(void) {
         str += F("]");
         uTotalPins += PINS[i].m_pins_count;
 
-        MosqClient.publish(String(MQTT_DEBUG).c_str(), str.c_str());
+        MSG_Publish(String(MQTT_DEBUG).c_str(), str.c_str());
 #if 1 == DEBUG_LOCAL
         DEBLN(str);
 #endif
@@ -122,7 +122,7 @@ void PIN_DisplayAssignments(void) {
     str = F("Total: ");
     str += uTotalPins;
     str += F(" pins assigned.");
-    MosqClient.publish(String(MQTT_DEBUG).c_str(), str.c_str());
+    MSG_Publish(String(MQTT_DEBUG).c_str(), str.c_str());
 }
 
 void PIN_GetPinGroupInfo(pint_type_e i_PinType, u16& i_uFirstPing,

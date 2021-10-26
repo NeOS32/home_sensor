@@ -16,7 +16,7 @@ void alarm_30s() {
         String tim_str(ANALOG_ReadChannel(i));
         String path_str(MQTT_SENSORS_ANALOG);
         path_str += i;
-        MosqClient.publish(path_str.c_str(), tim_str.c_str());
+        MSG_Publish(path_str.c_str(), tim_str.c_str());
         DEB_L(tim_str);
     }
 #endif // 1==N32_CFG_ANALOG_IN_ENABLED
@@ -32,7 +32,7 @@ void alarm_30s() {
         str += F("C, Ch1T=");
         str += HYSTERESIS_getTemp(1);
         str += F("C");
-        MosqClient.publish(MQTT_DEBUG, str.c_str());
+        MSG_Publish(MQTT_DEBUG, str.c_str());
         DEB_L(str);
     }
     String str( tempScaled >> 12 );
@@ -40,7 +40,7 @@ void alarm_30s() {
     str += remainder >> 12;
     String str1(MQTT_SENSORS_T);
     str1 += MQTT_SENSORS_T_MATA;
-    MosqClient.publish(str1.c_str(), str.c_str());
+    MSG_Publish(str1.c_str(), str.c_str());
 #endif
 }
 
@@ -71,7 +71,7 @@ static void timers_ShowErrors(void) {
     String str(MQTT_CLIENT_NAME);
     str += F(": ");
     str += ERR_GetNumberOfGlobalErrors();
-    if (false == MosqClient.publish(MQTT_ARD_DEVICES_ERRORS, str.c_str())) {
+    if (false == MSG_Publish(MQTT_ARD_DEVICES_ERRORS, str.c_str())) {
         DEBLN(F("Failed with publishing! (probably to long)"));
     }
 }
@@ -83,14 +83,14 @@ void alarm_1m() {
     str += F(": Up=");
     str += retUpTime();
 
-    if (false == MosqClient.publish(MQTT_DEV_STATE, str.c_str()))
+    if (false == MSG_Publish(MQTT_DEV_STATE, str.c_str()))
         DEBLN(F("Failed with publishing! (probably to long)"));
 
     String str1(F("Active timers: "));
     str1 += MAX_TIMERS - TIMER_GetNumberOfFreeTimers();
     str1 += F(", Errs: ");
     str1 += ERR_GetNumberOfGlobalErrors();
-    if (false == MosqClient.publish(MQTT_DEV_STATE, str1.c_str())) {
+    if (false == MSG_Publish(MQTT_DEV_STATE, str1.c_str())) {
         DEBLN(F("Failed with publishing! (probably to long)"));
     }
 
@@ -118,7 +118,7 @@ void alarm_15m() {
     str += __DATE__;
     str += F(" ");
     str += __TIME__;
-    if (false == MosqClient.publish(MQTT_DEV_STATE, str.c_str())) {
+    if (false == MSG_Publish(MQTT_DEV_STATE, str.c_str())) {
         DEB_W(F("Failed with publishing! (probably to long)"));
     }
 

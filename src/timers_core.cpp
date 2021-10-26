@@ -151,7 +151,7 @@ bool TIMER_Stop(u8 timer_id) {
                 IF_DEB_L() {
                     String str(F("TIMERS: client retriggered the timer"));
                     DEB_L(str);
-                    MosqClient.publish(MQTT_DEBUG, str.c_str());
+                    MSG_Publish(MQTT_DEBUG, str.c_str());
                 }
             }
         }
@@ -160,7 +160,7 @@ bool TIMER_Stop(u8 timer_id) {
                 String str(
                     F("TIMERS: calling stop on none existing timer function!"));
                 DEB_W(str);
-                MosqClient.publish(MQTT_DEBUG, str.c_str());
+                MSG_Publish(MQTT_DEBUG, str.c_str());
             }
             THROW_ERROR();
             return false;
@@ -234,7 +234,7 @@ void TIMER_PrintActiveTimers(void) {
             if (true == bFirst) {
                 String str1(F("\nActive timers:\n-=-=-=-=-="));
                 // DEBLN(str1);
-                MosqClient.publish(String(MQTT_DEBUG).c_str(), str1.c_str());
+                MSG_Publish(String(MQTT_DEBUG).c_str(), str1.c_str());
                 bFirst = false;
             }
             String str(F(" "));
@@ -255,6 +255,6 @@ void TIMER_PrintActiveTimers(void) {
             str += F(",  type=");
             str += T[i].type;
             DEB_T(str);
-            MosqClient.publish(MQTT_DEBUG, str.c_str());
+            MSG_Publish(MQTT_DEBUG, str.c_str());
         }
 }

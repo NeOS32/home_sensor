@@ -36,7 +36,7 @@ static void handler_UpdateSensorsAddr(void) {
         }
         DEB_L(stringAddr);
 
-        MosqClient.publish(MQTT_SENSORS_ADDR, stringAddr.c_str());
+        MSG_Publish(MQTT_SENSORS_ADDR, stringAddr.c_str());
     }
 }
 
@@ -57,7 +57,7 @@ static void HANDLER_OneWire(void) {
 
             String stringTemp;
             stringTemp += temperature;
-            MosqClient.publish(stringPath.c_str(), stringTemp.c_str());
+            MSG_Publish(stringPath.c_str(), stringTemp.c_str());
             DEBLN(stringTemp);
 
             IF_DEB_L() {
@@ -68,7 +68,7 @@ static void HANDLER_OneWire(void) {
                 str += F(", T=");
                 str += temperature;
                 DEBLN(str);
-                MosqClient.publish(MQTT_DEBUG, str.c_str());
+                MSG_Publish(MQTT_DEBUG, str.c_str());
                 DEBLN(stringPath + " : " + stringTemp);
             }
         }
@@ -131,7 +131,7 @@ static void temp_SendResults(actions_context_t& i_rActionsContext) {
 
         String stringTemp;
         stringTemp += temperature;
-        MosqClient.publish(stringPath.c_str(), stringTemp.c_str());
+        MSG_Publish(stringPath.c_str(), stringTemp.c_str());
 
         DEB_L(stringPath + F(" : ") + stringTemp);
     }

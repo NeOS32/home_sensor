@@ -71,7 +71,7 @@ static bool bin_in_UpdateStatus(bool i_bForced = false) {
                     str = F("OPENED");
                 else
                     str = F("CLOSED");
-                MosqClient.publish(stringPath.c_str(), str.c_str());
+                MSG_Publish(stringPath.c_str(), str.c_str());
             }
             else
                 strDiff += F("0");
@@ -88,7 +88,7 @@ static bool bin_in_UpdateStatus(bool i_bForced = false) {
         strOut += strDiff;
         String stringPath(MQTT_SENSORS_BIN_IN);
         stringPath += F("state");
-        MosqClient.publish(stringPath.c_str(), strOut.c_str());
+        MSG_Publish(stringPath.c_str(), strOut.c_str());
 
         DEB_L(strOut);
 

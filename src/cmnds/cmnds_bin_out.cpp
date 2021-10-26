@@ -47,7 +47,7 @@ static void binout_ChannelTurnON(actions_context_t& i_rActionsContext) {
         str += F(", Slot=");
         str += i_rActionsContext.slot;
         //DEBLN(str);
-        MosqClient.publish(MQTT_DEBUG, str.c_str());
+        MSG_Publish(MQTT_DEBUG, str.c_str());
     }
 
     u8 PhysicalPinBum;
@@ -80,7 +80,7 @@ static void binout_ChannelTurnOFF(actions_context_t& i_rActionsContext) {
         str += F(", Slot=");
         str += i_rActionsContext.slot;
         //DEBLN(str);
-        MosqClient.publish(MQTT_DEBUG, str.c_str());
+        MSG_Publish(MQTT_DEBUG, str.c_str());
     }
 
     u8 PhysicalPinBum;

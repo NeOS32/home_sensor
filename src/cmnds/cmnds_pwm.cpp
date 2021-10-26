@@ -254,7 +254,7 @@ bool decode_CMND_P(const byte* payload, state_t& s) {
     str += F(", Sum: ");
     str += (s.sum + '0');
     //DEBLN(str);
-    MosqClient.publish(MQTT_DEBUG, str.c_str());
+    MSG_Publish(MQTT_DEBUG, str.c_str());
 #endif // DEBUG_LOCAL
 
     return (sanity_ok);
