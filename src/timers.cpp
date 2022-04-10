@@ -35,7 +35,7 @@ void alarm_30s() {
         MSG_Publish(MQTT_DEBUG, str.c_str());
         DEB_L(str);
     }
-    String str( tempScaled >> 12 );
+    String str(tempScaled >> 12);
     str += F(".");
     str += remainder >> 12;
     String str1(MQTT_SENSORS_T);
@@ -100,7 +100,9 @@ void alarm_1m() {
 #if 1==N32_CFG_HISTERESIS_ENABLED
     HIST_DisplayAssignments();
 #endif // 1==N32_CFG_HISTERESIS_ENABLED
-
+#if 1==N32_CFG_QUICK_ACTIONS_ENABLED
+    QA_DisplayAssignments();
+#endif // 1 == N32_CFG_QUICK_ACTIONS_ENABLED
 }
 
 void alarm_2m() {

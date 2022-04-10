@@ -214,7 +214,9 @@ bool PWM_ExecuteCommand(const state_t& s) {
  * all channels for NS secs P8Axxxyy - Reset channel "A" to default state
  * P9Axxxyy - Reset all channels to default state
  */
-bool decode_CMND_P(const byte* payload, state_t& s) {
+bool decode_CMND_P(const byte* payload, state_t& s, u8* o_CmndLen) {
+    const byte* cmndStart = payload;
+
     s.command = (*payload++) - '0';     // [0..8] - command
     s.c.p.channel = (*payload++) - '0'; // [0..9] - Channel
 
@@ -257,6 +259,23 @@ bool decode_CMND_P(const byte* payload, state_t& s) {
     MSG_Publish(MQTT_DEBUG, str.c_str());
 #endif // DEBUG_LOCAL
 
+    // setting decoded and valid cmnd length
+    if (NULL != o_CmndLen)
+        *o_CmndLen = payload - cmndStart;
+
     return (sanity_ok);
+}
+
+module_caps_t PWM_getCapabilities(void) {
+    module_caps_t mc = {
+        .m_is_input = false,
+        .m_number_of_channels = PWM_NUM_OF_AVAIL_CHANNELS,
+        .m_module_name = F("PWM"),
+        .m_mod_init = PWM_ModuleInit,
+        .m_cmnd_decoder = decode_CMND_P,
+        .m_cmnd_executor = PWM_ExecuteCommand
+    };
+
+    return(mc);
 }
 #endif // 1==N32_CFG_PWM_ENABLED

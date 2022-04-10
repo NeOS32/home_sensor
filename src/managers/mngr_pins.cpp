@@ -85,10 +85,7 @@ void PIN_DisplayAssignments(void) {
 
     {
         String str_header(F("Pin assignments:\n-=-=-=-=-="));
-        MSG_Publish(String(MQTT_DEBUG).c_str(), str_header.c_str());
-#if 1 == DEBUG_LOCAL
-        DEBLN(str_header);
-#endif
+        MSG_Publish_Debug(str_header.c_str());
     }
 
     u8 PhysicalPinNumber, uTotalPins = 0;

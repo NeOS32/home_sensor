@@ -10,6 +10,7 @@ static debug_level_t uDebugLevel = DEBUG_WARN;
 
 #define BIN_MAX (0xFF)
 #define BIN_IN_CHECK_INTERVAL_IN_SECS (1)
+#define BIN_IN_LETTER 'I'
 
 static bool bin_in_getPinFromChannelNum(u8 i_LogicalChannelNum, u8& o_PhysicalPinNumber) {
 
@@ -55,6 +56,7 @@ static u16 readMask(void) {
 static u16 prev_mask = 0;
 static bool bin_in_UpdateStatus(bool i_bForced = false) {
     u16 current_mask = readMask();
+    bool bState;
 
     if (current_mask != prev_mask || true == i_bForced) {
         u16 diffs = current_mask ^ prev_mask;
@@ -62,15 +64,33 @@ static bool bin_in_UpdateStatus(bool i_bForced = false) {
         String strCurrent, strDiff, strOut, str;
         _FOR(i, 0, BIN_IN_NUM_OF_AVAIL_CHANNELS) {
             if (0x0 != ((1 << i) & diffs)) {
+                // first we have to change states
                 strDiff += F("1");
 
                 String stringPath(MQTT_SENSORS_BIN_IN);
                 stringPath += i;
 
-                if (0x0 != ((1 << i) & current_mask))
+                bState = 0x0 != ((1 << i) & current_mask);
+
+#if 1 == N32_CFG_QUICK_ACTIONS_ENABLED
+                // thne, is there a QA registered? If yes, let's trigger a command.
+                u8 slot_num;
+                if (true == QA_isStateTracked(BIN_IN_LETTER, i, bState, slot_num))
+                    QA_ExecuteCommand(slot_num); // in e2prom we may have only validated data, so no extra command checking
+                else {
+                    IF_DEB_L() {
+                        String str(F("BIN_IN: Flow not tracked"));
+                        SERIAL_publish(str.c_str());
+                    }
+                }
+#endif // N32_CFG_QUICK_ACTIONS_ENABLED
+
+                if (true == bState)
                     str = F("OPENED");
                 else
                     str = F("CLOSED");
+
+                // and finally publish state to the broker
                 MSG_Publish(stringPath.c_str(), str.c_str());
             }
             else
@@ -89,8 +109,6 @@ static bool bin_in_UpdateStatus(bool i_bForced = false) {
         String stringPath(MQTT_SENSORS_BIN_IN);
         stringPath += F("state");
         MSG_Publish(stringPath.c_str(), strOut.c_str());
-
-        DEB_L(strOut);
 
         prev_mask = current_mask;
     }
@@ -143,7 +161,9 @@ bool BIN_IN_ExecuteCommand(const state_t& s) {
  * I0S - Update the state (forced)
  * I1S - Update the state (forced)
  */
-bool decode_CMND_I(const byte* payload, state_t& s) {
+bool decode_CMND_I(const byte* payload, state_t& s, u8* o_CmndLen) {
+    const byte* cmndStart = payload;
+
     s.command = (*payload++) - '0'; // [0..8] - command
     s.sum = (*payload++) - '0'; // sum = 1
 
@@ -152,15 +172,38 @@ bool decode_CMND_I(const byte* payload, state_t& s) {
         if (true == isSumOk(s))
             sanity_ok = true;
 
+    // setting decoded and valid cmnd length
+    if (NULL != o_CmndLen)
+        *o_CmndLen = payload - cmndStart;
+
     // Info display
     IF_DEB_L() {
-        String str(F("BIN IN: update, "));
+        String str(F("BIN IN: sanity: "));
+        str += sanity_ok;
         str += F(", Sum: ");
         u8 i = s.sum + '0';
         str += i;
+        if (NULL != o_CmndLen) {
+            str += F(", decoded cmnd len: ");
+            str += *o_CmndLen;
+        }
         DEBLN(str);
     }
 
     return (sanity_ok);
 }
+
+module_caps_t BIN_IN_getCapabilities(void) {
+    module_caps_t mc = {
+        .m_is_input = true,
+        .m_number_of_channels = BIN_IN_NUM_OF_AVAIL_CHANNELS,
+        .m_module_name = F("BIN_IN"),
+        .m_mod_init = BIN_IN_ModuleInit,
+        .m_cmnd_decoder = decode_CMND_I,
+        .m_cmnd_executor = BIN_IN_ExecuteCommand
+    };
+
+    return(mc);
+}
+
 #endif // N32_CFG_BIN_IN_ENABLED

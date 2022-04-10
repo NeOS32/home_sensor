@@ -5,7 +5,7 @@
 #include "my_common.h"
 
 // debug facility
-static debug_level_t uDebugLevel = DEBUG_TRACE;
+static debug_level_t uDebugLevel = DEBUG_WARN;
 
 // timers data structures
 static my_timer_t T[MAX_TIMERS];
@@ -234,7 +234,7 @@ void TIMER_PrintActiveTimers(void) {
             if (true == bFirst) {
                 String str1(F("\nActive timers:\n-=-=-=-=-="));
                 // DEBLN(str1);
-                MSG_Publish(String(MQTT_DEBUG).c_str(), str1.c_str());
+                MSG_Publish_Debug( str1.c_str());
                 bFirst = false;
             }
             String str(F(" "));

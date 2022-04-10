@@ -6,7 +6,7 @@
 
 #if 1 == N32_CFG_TEMP_ENABLED
 
-static debug_level_t uDebugLevel = DEBUG_LOG;
+static debug_level_t uDebugLevel = DEBUG_WARN;
 
 #define DEFAULT_DELAY_FOR_CONVERSION_IN_S 5
 
@@ -183,7 +183,9 @@ bool TEMP_ExecuteCommand(const state_t& s) {
  * T3A - Show sensor addresses in messaage broker (MQTT)
  * T4A - Pause/Restart temperature conversion
  */
-bool decode_CMND_T(const byte* payload, state_t& s) {
+bool decode_CMND_T(const byte* payload, state_t& s, u8* o_CmndLen) {
+    const byte* cmndStart = payload;
+    
     s.command = (*payload++) - '0'; // 0..4
     s.c.t.channel = (*payload++) - '0'; // 0..DS18B20_NUM_OF_AVAIL_CHANNELS
 
@@ -211,6 +213,23 @@ bool decode_CMND_T(const byte* payload, state_t& s) {
         DEBLN(str);
     }
 
+    // setting decoded and valid cmnd length
+    if (NULL != o_CmndLen)
+        *o_CmndLen = payload - cmndStart;
+
     return (sanity_ok);
+}
+
+module_caps_t TEMP_getCapabilities(void) {
+    module_caps_t mc = {
+        .m_is_input = false,
+        .m_number_of_channels = DS18B20_NUM_OF_AVAIL_CHANNELS,
+        .m_module_name = F("TEMP"),
+        .m_mod_init = TEMP_ModuleInit,
+        .m_cmnd_decoder = decode_CMND_T,
+        .m_cmnd_executor = TEMP_ExecuteCommand
+    };
+
+    return(mc);
 }
 #endif // N32_CFG_LED_W2918_ENABLED

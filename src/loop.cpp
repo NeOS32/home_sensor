@@ -4,6 +4,8 @@
 
 #include "my_common.h"
 
+#define LOOP_DELAY_TIME_IN_MS (200)
+
 static debug_level_t uDebugLevel = DEBUG_WARN;
 
 static void handler_Ethernet(void) { Ethernet.maintain(); }
@@ -47,7 +49,7 @@ void loop() {
         static u32 i = 0;
         i++;
         if (i % 20 == 0)
-            MSG_Publish(MQTT_DEBUG, String(F("Tick!")).c_str());
+            MSG_Publish_Debug(String(F("Tick!")).c_str());
     }
 
 #if 1==N32_CFG_ETH_ENABLED
@@ -71,7 +73,7 @@ void loop() {
 
         if (timeStatus() != timeSet) {
             IF_DEB_W() {
-                MSG_Publish(MQTT_DEBUG, String(F("ERR: NTP: time not fetched!")).c_str());
+                MSG_Publish_Debug(String(F("ERR: NTP: time not fetched!")).c_str());
             }
         }
         else {
@@ -87,6 +89,6 @@ void loop() {
         prev_t = t;
     }
 
-    // sleep 200ms
-    Alarm.delay(200);
+    // sleep LOOP_DELAY_TIME_IN_MS ms == 200 ms
+    Alarm.delay(LOOP_DELAY_TIME_IN_MS);
 }

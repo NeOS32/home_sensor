@@ -163,11 +163,12 @@ bool BIN_OUT_ExecuteCommand(const state_t& s) {
 }
 
 /**
- * B0ANS - Output "A" is set HIGH for NS seconds
+ * B0ANS - Output "A" is set ACTIVE for NS seconds
  * B1ANS - Output "A" is reset (set LOW forced)
- * B2ANS - All outputs are reset (set LOW forced)
+ * B2ANS - All outputs are reset (set NOT ACTIIVE forced)
  */
-bool decode_CMND_B(const byte* payload, state_t& s) {
+bool decode_CMND_B(const byte* payload, state_t& s, u8* o_CmndLen) {
+    const byte* cmndStart = payload;
     bool sanity_ok = false;
 
     s.command = (*payload++) - '0'; // [0..8] - command
@@ -208,6 +209,24 @@ ERROR:
         DEBLN(str);
     }
 
+    // setting decoded and valid cmnd length
+    if (NULL != o_CmndLen)
+        *o_CmndLen = payload - cmndStart;
+
     return (sanity_ok);
 }
+
+module_caps_t BIN_OUT_getCapabilities(void) {
+    module_caps_t mc = {
+        .m_is_input = false,
+        .m_number_of_channels = BIN_OUT_NUM_OF_AVAIL_CHANNELS,
+        .m_module_name = F("BIN_OUT"),
+        .m_mod_init = BIN_OUT_ModuleInit,
+        .m_cmnd_decoder = decode_CMND_B,
+        .m_cmnd_executor = BIN_OUT_ExecuteCommand
+    };
+
+    return(mc);
+}
+
 #endif // N32_CFG_BIN_OUT_ENABLED

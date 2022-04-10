@@ -74,11 +74,11 @@ static bool hyst_activateSlot(hist_slot_number_t i_SlotNumber) {
 
     if (true == hyst_isSlotActive(i_SlotNumber))
         IF_DEB_W() {
-            String str = F(" WARN: hist: slot=");
-            str += i_SlotNumber;
-            str += F(" has already been activated!");
-            MSG_Publish(MQTT_DEBUG, str.c_str());
-        }
+        String str = F(" WARN: hist: slot=");
+        str += i_SlotNumber;
+        str += F(" has already been activated!");
+        MSG_Publish(MQTT_DEBUG, str.c_str());
+    }
 
     HIST_States[i_SlotNumber].temp_low = HIST_States[i_SlotNumber].temp_high = 0;
     HIST_States[i_SlotNumber].time_end = 0;
@@ -260,11 +260,11 @@ static void hist_EmergencyShutdown(void) {
 static bool hist_ShutDownChannel(hist_slot_number_t i_SlotNumber) {
     if (false == hyst_isSlotActive(i_SlotNumber))
         IF_DEB_W() {
-            String str(F(" WARN: hist: slot "));
-            str += i_SlotNumber;
-            str += F(" not active, while shutting down");
-            MSG_Publish(MQTT_DEBUG, str.c_str());
-        }
+        String str(F(" WARN: hist: slot "));
+        str += i_SlotNumber;
+        str += F(" not active, while shutting down");
+        MSG_Publish(MQTT_DEBUG, str.c_str());
+    }
 
     u8 PhysicalPin;
     if (false == hyst_getPinFromChannelNum(i_SlotNumber, PhysicalPin)) {
@@ -348,11 +348,11 @@ static void hyst_StartProcess(actions_context_t& i_rActionsContext) {
     hist_slot_number_t slot = i_rActionsContext.var1;
     if (true == hyst_isSlotActive(slot))
         IF_DEB_W() {
-            String str(F(" WARN: hist: slot="));
-            str += slot;
-            str += F(" has already been started!");
-            MSG_Publish(MQTT_DEBUG, str.c_str());
-        }
+        String str(F(" WARN: hist: slot="));
+        str += slot;
+        str += F(" has already been started!");
+        MSG_Publish(MQTT_DEBUG, str.c_str());
+    }
 
     // finally, we're executing actual (possible) heating here
     hist_Control(slot);
@@ -577,7 +577,8 @@ bool HYST_ExecuteCommand(const state_t& s) {
  * H2x     - Show read temperatures in message broker (MQTT)
  * H3A     - Stop heating in channel 'A'
  */
-bool decode_CMND_H(const byte* payload, state_t& s) {
+bool decode_CMND_H(const byte* payload, state_t& s, u8* o_CmndLen) {
+    const byte* cmndStart = payload;
     bool sanity_ok = false;
 
     s.command = (*payload++) - '0';
@@ -640,6 +641,10 @@ ERROR:
         MSG_Publish(MQTT_DEBUG, str.c_str());
     }
 
+    // setting decoded and valid cmnd length
+    if (NULL != o_CmndLen)
+        *o_CmndLen = payload - cmndStart;
+
     return (sanity_ok);
 }
 
@@ -674,6 +679,19 @@ void HIST_DisplayAssignments(void) {
     str += HIST_NUM_OF_AVAIL_CHANNELS;
     // DEBLN(str);
     MSG_Publish(MQTT_DEBUG, str.c_str());
+}
+
+module_caps_t HYST_getCapabilities(void) {
+    module_caps_t mc = {
+        .m_is_input = false,
+        .m_number_of_channels = HIST_NUM_OF_AVAIL_CHANNELS,
+        .m_module_name = F("HYST"),
+        .m_mod_init = HYSTERESIS_ModuleInit,
+        .m_cmnd_decoder = decode_CMND_H,
+        .m_cmnd_executor = HYST_ExecuteCommand
+    };
+
+    return(mc);
 }
 
 #endif // N32_CFG_HISTERESIS_ENABLED
