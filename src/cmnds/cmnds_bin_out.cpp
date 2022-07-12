@@ -24,21 +24,48 @@ static bool binout_getPinFromChannelNum(u8 i_ChannelNumber, u8& o_PinNumber) {
     return false; // error, means function failed to execute command
 }
 
-static void binout_SetupChannel(u8 i_ChannelNumber, u8 DefaultState = LOW) {
+static void binout_SetupChannel(u8 i_ChannelNumber, u8 i_DefaultState = LOW) {
     u8 PhysicalPinNumber;
 
     if (true == binout_getPinFromChannelNum(i_ChannelNumber, PhysicalPinNumber)) {
         pinMode(PhysicalPinNumber, OUTPUT);
-        digitalWrite(PhysicalPinNumber, DefaultState);
+        digitalWrite(PhysicalPinNumber, i_DefaultState);
+    }
+}
+
+static void binout_SetPhysicalPinInActiveState(u8 i_logSchannelNumber, u8 i_uPhysicalPinBum) {
+    // for channels 0..BIN_NUM_OF_DEFAULT_HIGH_CHANNELS default is state
+    // HIGH, so turning it ON means, setting pin "LOW". For channels >=
+    // BIN_NUM_OF_DEFAULT_HIGH_CHANNELS, default is state LOW, so turning it
+    // ON means, setting pin to "HIGH"
+    u8 state = digitalRead(i_uPhysicalPinBum);
+    if (i_logSchannelNumber < BIN_OUT_LINE_DH_COUNT) {
+        if (LOW != state)
+            digitalWrite(i_uPhysicalPinBum, LOW); // var2 == pin
+    }
+    else {
+        if (HIGH != state)
+            digitalWrite(i_uPhysicalPinBum, HIGH); // var2 == pin
+    }
+}
+
+static void binout_SetPhysicalPinInInActiveState(u8 i_logSchannelNumber, u8 i_uPhysicalPinBum) {
+    // for channels 0..BIN_NUM_OF_DEFAULT_HIGH_CHANNELS default is state
+    // HIGH, so turning it ON means, setting pin "LOW". For channels >=
+    // BIN_NUM_OF_DEFAULT_HIGH_CHANNELS, default is state LOW, so turning it
+    // ON means, setting pin to "HIGH"
+    u8 state = digitalRead(i_uPhysicalPinBum);
+    if (i_logSchannelNumber < BIN_OUT_LINE_DH_COUNT) {
+        if (HIGH != state)
+            digitalWrite(i_uPhysicalPinBum, HIGH); // var2 == pin
+    }
+    else {
+        if (LOW != state)
+            digitalWrite(i_uPhysicalPinBum, LOW); // var2 == pin
     }
 }
 
 static void binout_ChannelTurnON(actions_context_t& i_rActionsContext) {
-    // for channels 0..BIN_NUM_OF_DEFAULT_HIGH_CHANNELS default is state HIGH,
-    // so turning it ON means, setting pin "LOW". For channels >=
-    // BIN_NUM_OF_DEFAULT_HIGH_CHANNELS, default is state LOW, so turning it ON
-    // means, setting pin to "HIGH"
-
     IF_DEB_L() {
         String str(F("BIN: turn_on Channel="));
         str += i_rActionsContext.var1;
@@ -47,7 +74,7 @@ static void binout_ChannelTurnON(actions_context_t& i_rActionsContext) {
         str += F(", Slot=");
         str += i_rActionsContext.slot;
         //DEBLN(str);
-        MSG_Publish(MQTT_DEBUG, str.c_str());
+        MSG_Publish_Debug(str.c_str());
     }
 
     u8 PhysicalPinBum;
@@ -64,11 +91,7 @@ static void binout_ChannelTurnON(actions_context_t& i_rActionsContext) {
         return;
     }
 
-    // var1 == channel num
-    if (i_rActionsContext.var1 < BIN_OUT_LINE_DH_COUNT)
-        digitalWrite(PhysicalPinBum, LOW); // var2 == pin
-    else
-        digitalWrite(PhysicalPinBum, HIGH); // var2 == pin
+    binout_SetPhysicalPinInActiveState(i_rActionsContext.var1, PhysicalPinBum);
 };
 
 static void binout_ChannelTurnOFF(actions_context_t& i_rActionsContext) {
@@ -80,7 +103,7 @@ static void binout_ChannelTurnOFF(actions_context_t& i_rActionsContext) {
         str += F(", Slot=");
         str += i_rActionsContext.slot;
         //DEBLN(str);
-        MSG_Publish(MQTT_DEBUG, str.c_str());
+        MSG_Publish_Debug(str.c_str());
     }
 
     u8 PhysicalPinBum;
@@ -97,14 +120,7 @@ static void binout_ChannelTurnOFF(actions_context_t& i_rActionsContext) {
         return;
     }
 
-    // for channels 0..BIN_NUM_OF_DEFAULT_HIGH_CHANNELS default is state
-    // HIGH, so turning it ON means, setting pin "LOW". For channels >=
-    // BIN_NUM_OF_DEFAULT_HIGH_CHANNELS, default is state LOW, so turning it
-    // ON means, setting pin to "HIGH"
-    if (i_rActionsContext.var1 < BIN_OUT_LINE_DH_COUNT)
-        digitalWrite(PhysicalPinBum, HIGH); // var2 == pin
-    else
-        digitalWrite(PhysicalPinBum, LOW); // var2 == pin
+    binout_SetPhysicalPinInInActiveState(i_rActionsContext.var1, PhysicalPinBum);
 }
 
 void BIN_OUT_ModuleInit(void) {
@@ -143,6 +159,12 @@ bool BIN_OUT_ExecuteCommand(const state_t& s) {
     if (CMNDS_NULL != (slot = CMNDS_GetSlotNumber(s))) {
         switch (s.command) {
         case CMND_BIN_OUT_B0_CHANNEL_ON_FOR_NS: // DONE
+            if ((u32)0x0 == s.count) { // is that a stopping request?
+                if (CMNDS_isSlotActive(slot)) // is that slot still active?
+                    CMNDS_ResetSlotState(slot);
+                binout_SetPhysicalPinInInActiveState(s.c.b.channel, s.c.b.pin);
+                return true;
+            }
             return (CMNDS_ScheduleAction(s, Actions, ActionsContext));
 
         case CMND_BIN_OUT_B1_RESET_CHANNEL: // DONE

@@ -77,7 +77,7 @@ static bool hyst_activateSlot(hist_slot_number_t i_SlotNumber) {
         String str = F(" WARN: hist: slot=");
         str += i_SlotNumber;
         str += F(" has already been activated!");
-        MSG_Publish(MQTT_DEBUG, str.c_str());
+        MSG_Publish_Debug(str.c_str());
     }
 
     HIST_States[i_SlotNumber].temp_low = HIST_States[i_SlotNumber].temp_high = 0;
@@ -101,7 +101,7 @@ static bool hyst_deallocateSlot(hist_slot_number_t i_SlotNumber) {
         String str = F(" hyst: clearing hyst_slot=");
         str += i_SlotNumber;
         // DEBLN(str);
-        MSG_Publish(MQTT_DEBUG, str.c_str());
+        MSG_Publish_Debug(str.c_str());
     }
 
     HIST_States[i_SlotNumber].state = 0x0;
@@ -162,7 +162,7 @@ static u32 getTempBasedOnR(u32 Rdev) {
         str += ", v_max=";
         str += v_max;
         // DEBLN(str);
-        MSG_Publish(MQTT_DEBUG, str.c_str());
+        MSG_Publish_Debug(str.c_str());
     }
 
     // normalization
@@ -187,7 +187,7 @@ static u32 getTempBasedOnR(u32 Rdev) {
                 str += ", ret=";
                 str += ret;
                 // DEBLN(str);
-                MSG_Publish(MQTT_DEBUG, str.c_str());
+                MSG_Publish_Debug(str.c_str());
             }
 
             return (ret);
@@ -221,7 +221,7 @@ u32 HYSTERESIS_getTempScaled(u8 i_SlotNumber) {
         str += F(", Temp=");
         str += ((u32)getTempBasedOnR(Rdev));
         // DEBLN(str);
-        MSG_Publish(MQTT_DEBUG, str.c_str());
+        MSG_Publish_Debug(str.c_str());
     }
 
     return (getTempBasedOnR(Rdev));
@@ -238,7 +238,7 @@ static void hist_PinSetState(u8 i_PhysicalPin, u8 i_State) {
         str += F(", to=");
         str += i_State;
         // DEBLN(str);
-        MSG_Publish(MQTT_DEBUG, str.c_str());
+        MSG_Publish_Debug(str.c_str());
     }
 
     digitalWrite(i_PhysicalPin, i_State);
@@ -263,7 +263,7 @@ static bool hist_ShutDownChannel(hist_slot_number_t i_SlotNumber) {
         String str(F(" WARN: hist: slot "));
         str += i_SlotNumber;
         str += F(" not active, while shutting down");
-        MSG_Publish(MQTT_DEBUG, str.c_str());
+        MSG_Publish_Debug(str.c_str());
     }
 
     u8 PhysicalPin;
@@ -319,7 +319,7 @@ static bool hist_Control(hist_slot_number_t i_SlotNumber) {
         str += currentTemp;
         str += F(", temp_high=");
         str += HIST_States[i_SlotNumber].temp_high;
-        MSG_Publish(MQTT_DEBUG, str.c_str());
+        MSG_Publish_Debug(str.c_str());
     }
 
     if (currentTemp > HIST_MAX_TEMP_READ_IN_C) {
@@ -342,7 +342,7 @@ static void hyst_StartProcess(actions_context_t& i_rActionsContext) {
     IF_DEB_L() {
         String str(F("HIST: tick1!"));
         //DEBLN(str);
-        MSG_Publish(MQTT_DEBUG, str.c_str());
+        MSG_Publish_Debug(str.c_str());
     }
 
     hist_slot_number_t slot = i_rActionsContext.var1;
@@ -351,7 +351,7 @@ static void hyst_StartProcess(actions_context_t& i_rActionsContext) {
         String str(F(" WARN: hist: slot="));
         str += slot;
         str += F(" has already been started!");
-        MSG_Publish(MQTT_DEBUG, str.c_str());
+        MSG_Publish_Debug(str.c_str());
     }
 
     // finally, we're executing actual (possible) heating here
@@ -367,7 +367,7 @@ static void hyst_StopProcess(actions_context_t& i_rActionsContext) {
     IF_DEB_L() {
         String str(F("HIST: hyst_StopProcess()!"));
         //DEBLN(str);
-        MSG_Publish(MQTT_DEBUG, str.c_str());
+        MSG_Publish_Debug(str.c_str());
     }
 
     hist_slot_number_t slot = i_rActionsContext.var1;
@@ -382,7 +382,7 @@ static void hyst_StopProcess(actions_context_t& i_rActionsContext) {
         IF_DEB_L() {
             String str1(F("HIST: no more heating needed, shutting down slot"));
             //DEBLN(str1);
-            MSG_Publish(MQTT_DEBUG, str1.c_str());
+            MSG_Publish_Debug(str1.c_str());
         }
 
         if (false == hist_ShutDownChannel(slot)) {
@@ -416,7 +416,7 @@ static void hyst_StopProcess(actions_context_t& i_rActionsContext) {
         str2 += F(", for ");
         str2 += HIST_TIME_SLOT_LENGTH;
         str2 += F(" secs. ");
-        MSG_Publish(MQTT_DEBUG, str2.c_str());
+        MSG_Publish_Debug(str2.c_str());
     }
 
     // heating slot still active, so continuing
@@ -437,7 +437,7 @@ static bool hyst_RetriggerOnAlreadyGoing(const state_t& s) {
             str += HIST_States[s.c.h.channel].timer_id;
             str += F(", on hist_slot=");
             str += s.c.h.channel;
-            MSG_Publish(MQTT_DEBUG, str.c_str());
+            MSG_Publish_Debug(str.c_str());
         }
 
         // timer_id was set in the previous command on this channel, so we can use it here
@@ -466,7 +466,7 @@ static bool hyst_RetriggerOnAlreadyGoing(const state_t& s) {
         str += s.c.h.channel;
         str += F(", new_timer secs=");
         str += s.count;
-        MSG_Publish(MQTT_DEBUG, str.c_str());
+        MSG_Publish_Debug(str.c_str());
     }
 
     // ok, if got here, it means it's just the slot's timer restart
@@ -551,7 +551,7 @@ bool HYST_ExecuteCommand(const state_t& s) {
                 str += F(", timer_id=");
                 str += HIST_States[HistSlot].timer_id;
 
-                MSG_Publish(MQTT_DEBUG, str.c_str());
+                MSG_Publish_Debug(str.c_str());
             }
             return(true);
 
@@ -638,7 +638,7 @@ ERROR:
         str += F(", Sum: ");
         str += (s.sum + '0');
         //DEBLN(str);
-        MSG_Publish(MQTT_DEBUG, str.c_str());
+        MSG_Publish_Debug(str.c_str());
     }
 
     // setting decoded and valid cmnd length
@@ -654,7 +654,7 @@ void HIST_DisplayAssignments(void) {
     {
         String str1(F("\nHIST slots assignments:\n-=-=-=-=-="));
         // DEBLN(str);
-        MSG_Publish(MQTT_DEBUG, str1.c_str());
+        MSG_Publish_Debug(str1.c_str());
     }
 
     _FOR(i, 0, HIST_NUM_OF_AVAIL_CHANNELS) {
@@ -672,13 +672,13 @@ void HIST_DisplayAssignments(void) {
         str += TIMER_IsActive(HIST_States[i].timer_id);
 
         // DEBLN(str);
-        MSG_Publish(MQTT_DEBUG, str.c_str());
+        MSG_Publish_Debug(str.c_str());
     }
 
     str = F("Total hist_slots: ");
     str += HIST_NUM_OF_AVAIL_CHANNELS;
     // DEBLN(str);
-    MSG_Publish(MQTT_DEBUG, str.c_str());
+    MSG_Publish_Debug(str.c_str());
 }
 
 module_caps_t HYST_getCapabilities(void) {

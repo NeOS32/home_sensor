@@ -4,7 +4,7 @@
 
 #include "my_common.h"
 
-static debug_level_t uDebugLevel = DEBUG_LOG;
+static debug_level_t uDebugLevel = DEBUG_WARN;
 
 void MQTT_callback(char* topic, byte* payload, unsigned int length) {
     IF_DEB_L() {

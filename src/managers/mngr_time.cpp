@@ -31,14 +31,15 @@ u32 getSecondsFromNumberAndScale(char number, char scale) {
 }
 
 u8 getDecodedChannelNum(u8 uRawNumber) {
+    // INTENTION: to convert an ascii char into a valid integer. Here are the rules:
+    // for values <= 9 return itself
+    // for values <= 'A'..'Z' return 10 + offset of given character starting from 'A'
+
     if (uRawNumber <= 9)
         return uRawNumber;
 
     uRawNumber += '0';
     uRawNumber -= 'A';
 
-    if (uRawNumber <= 5)
-        return 10 + uRawNumber;
-
-    return CMNDS_NULL; // FAILED
+    return 10 + uRawNumber; // we're returning base + delta. This gives us 10 + 25 (90-65=25) => 35 values
 }

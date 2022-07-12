@@ -68,7 +68,7 @@ static void HANDLER_OneWire(void) {
                 str += F(", T=");
                 str += temperature;
                 DEBLN(str);
-                MSG_Publish(MQTT_DEBUG, str.c_str());
+                MSG_Publish_Debug(str.c_str());
                 DEBLN(stringPath + " : " + stringTemp);
             }
         }

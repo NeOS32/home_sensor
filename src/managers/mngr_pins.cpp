@@ -4,9 +4,7 @@
 
 #include "my_common.h"
 
-#ifdef DEBUG
-#define DEBUG_LOCAL 1
-#endif
+static debug_level_t uDebugLevel = DEBUG_WARN;
 
 #define MAX_PIN_ASSIGNMENTS (12)
 #define MAX_PINS (100)
@@ -39,22 +37,21 @@ static bool doCheckIfNewModIsOk(getPhysicalPinFromLogical_f i_fTransform,
 
         if ((uFirstPhysicalPinNumber >= uModFirstPhysicalPinNumber && uFirstPhysicalPinNumber <= uModLastPhysicalPinNumber) ||
             (uLastPhysicalPinNumber >= uModFirstPhysicalPinNumber && uLastPhysicalPinNumber <= uModLastPhysicalPinNumber)) {
-                {
-                    String str(F("ERR: A few of physical pin numbers: "));
-                    str += uFirstPhysicalPinNumber;
-                    str += F("..");
-                    str += uLastPhysicalPinNumber;
-                    str += F(" (from module '");
-                    str += i_pModule;
-                    str += F("'), have already been registered with module: 'Name='");
-                    str += PINS[i].m_module_name;
-                    str += F("'\n");
-                    MSG_Publish(String(MQTT_DEBUG).c_str(), str.c_str());
-#if 1 == DEBUG_LOCAL
-                    DEBLN(str);
-#endif
-                    return (false);
-                }
+            IF_DEB_E() {
+                String str(F("ERR: A few of physical pin numbers: "));
+                str += uFirstPhysicalPinNumber;
+                str += F("..");
+                str += uLastPhysicalPinNumber;
+                str += F(" (from module '");
+                str += i_pModule;
+                str += F("'), have already been registered with module: 'Name='");
+                str += PINS[i].m_module_name;
+                str += F("'\n");
+                MSG_Publish(String(MQTT_DEBUG).c_str(), str.c_str());
+                // DEBLN(str);
+
+                return (false);
+            }
         }
     }
 
@@ -64,7 +61,7 @@ static bool doCheckIfNewModIsOk(getPhysicalPinFromLogical_f i_fTransform,
 bool PIN_RegisterPins(getPhysicalPinFromLogical_f i_fTransform, int i_Count,
     const __FlashStringHelper* i_pModule,
     int i_LogicalFirstPin) {
-        
+
     if (false == doCheckIfNewModIsOk(i_fTransform, i_Count, i_pModule, i_LogicalFirstPin))
         return false;
 
@@ -111,7 +108,7 @@ void PIN_DisplayAssignments(void) {
         str += F("]");
         uTotalPins += PINS[i].m_pins_count;
 
-        MSG_Publish(String(MQTT_DEBUG).c_str(), str.c_str());
+        MSG_Publish_Debug(str.c_str());
 #if 1 == DEBUG_LOCAL
         DEBLN(str);
 #endif
@@ -119,7 +116,7 @@ void PIN_DisplayAssignments(void) {
     str = F("Total: ");
     str += uTotalPins;
     str += F(" pins assigned.");
-    MSG_Publish(String(MQTT_DEBUG).c_str(), str.c_str());
+    MSG_Publish_Debug(str.c_str());
 }
 
 void PIN_GetPinGroupInfo(pint_type_e i_PinType, u16& i_uFirstPing,

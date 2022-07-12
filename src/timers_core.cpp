@@ -151,7 +151,7 @@ bool TIMER_Stop(u8 timer_id) {
                 IF_DEB_L() {
                     String str(F("TIMERS: client retriggered the timer"));
                     DEB_L(str);
-                    MSG_Publish(MQTT_DEBUG, str.c_str());
+                    MSG_Publish_Debug(str.c_str());
                 }
             }
         }
@@ -160,7 +160,7 @@ bool TIMER_Stop(u8 timer_id) {
                 String str(
                     F("TIMERS: calling stop on none existing timer function!"));
                 DEB_W(str);
-                MSG_Publish(MQTT_DEBUG, str.c_str());
+                MSG_Publish_Debug(str.c_str());
             }
             THROW_ERROR();
             return false;
@@ -255,6 +255,6 @@ void TIMER_PrintActiveTimers(void) {
             str += F(",  type=");
             str += T[i].type;
             DEB_T(str);
-            MSG_Publish(MQTT_DEBUG, str.c_str());
+            MSG_Publish_Debug(str.c_str());
         }
 }

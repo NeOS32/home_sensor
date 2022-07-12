@@ -26,10 +26,10 @@ static void turn_off_valve(unsigned int channel, unsigned int valve) {
         delay(VALVE_SWITCH_DELAY_MS);              // aits DELAY_MS_SEQ ms
         digitalWrite(VALVE_SWITCH_DELAY_MS, HIGH); // sets the digital pin 13 on
 
-        MSG_Publish(MQTT_DEV_STATE, "Backup pin turned off!");
+        MSG_Publish_State("Backup pin turned off!");
     }
 
-    MSG_Publish(MQTT_DEV_STATE, str.c_str()); // extra debug
+    MSG_Publish_State(str.c_str()); // extra debug
 }
 
 static void turn_on_valve(unsigned int channel, unsigned int valve) {
@@ -46,13 +46,13 @@ static void turn_on_valve(unsigned int channel, unsigned int valve) {
         digitalWrite(VALVE_SWITCH_DELAY_MS, LOW); // sets the digital pin 13 on
         delay(VALVE_SWITCH_DELAY_MS); // aits VALVE_SWITCH_DELAY_MS ms
 
-        MSG_Publish(MQTT_DEV_STATE, "Backup pin turned on!");
+        MSG_Publish_State("Backup pin turned on!");
     }
     digitalWrite(channel, LOW);   // sets the digital pin 13 on
     delay(VALVE_SWITCH_DELAY_MS); // aits VALVE_SWITCH_DELAY_MS ms
     digitalWrite(valve, LOW);     // sets the digital pin 13 on
 
-    MSG_Publish(MQTT_DEV_STATE, str.c_str()); // extra debug
+    MSG_Publish_State(str.c_str()); // extra debug
 }
 
 static void set_valve_state_for_time(const state_t& s, boolean mode = INPUT) {

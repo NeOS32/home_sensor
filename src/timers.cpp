@@ -4,7 +4,7 @@
 
 #include "my_common.h"
 
-static debug_level_t uDebugLevel = DEBUG_TRACE;
+static debug_level_t uDebugLevel = DEBUG_WARN;
 
 void alarm_15s() {
 }
@@ -32,8 +32,8 @@ void alarm_30s() {
         str += F("C, Ch1T=");
         str += HYSTERESIS_getTemp(1);
         str += F("C");
-        MSG_Publish(MQTT_DEBUG, str.c_str());
-        DEB_L(str);
+        MSG_Publish_Debug( str.c_str());
+        //DEB_L(str);
     }
     String str(tempScaled >> 12);
     str += F(".");
@@ -83,14 +83,14 @@ void alarm_1m() {
     str += F(": Up=");
     str += retUpTime();
 
-    if (false == MSG_Publish(MQTT_DEV_STATE, str.c_str()))
+    if (false == MSG_Publish_State(str.c_str()))
         DEBLN(F("Failed with publishing! (probably to long)"));
 
     String str1(F("Active timers: "));
     str1 += MAX_TIMERS - TIMER_GetNumberOfFreeTimers();
     str1 += F(", Errs: ");
     str1 += ERR_GetNumberOfGlobalErrors();
-    if (false == MSG_Publish(MQTT_DEV_STATE, str1.c_str())) {
+    if (false == MSG_Publish_State(str1.c_str())) {
         DEBLN(F("Failed with publishing! (probably to long)"));
     }
 
@@ -107,7 +107,9 @@ void alarm_1m() {
 
 void alarm_2m() {
     timers_ShowErrors();
+#if 1==N32_CFG_WITH_ERR_STORAGE
     ERR_ShowGlobalErrors();
+#endif // N32_CFG_WITH_ERR_STORAGE
 }
 
 // once a minute, we want to read all avail nodes addresses and publish it to
@@ -120,7 +122,7 @@ void alarm_15m() {
     str += __DATE__;
     str += F(" ");
     str += __TIME__;
-    if (false == MSG_Publish(MQTT_DEV_STATE, str.c_str())) {
+    if (false == MSG_Publish_State(str.c_str())) {
         DEB_W(F("Failed with publishing! (probably to long)"));
     }
 

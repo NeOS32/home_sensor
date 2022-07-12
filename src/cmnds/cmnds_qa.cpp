@@ -10,7 +10,7 @@
 // Module name: Quick Actions
 // Module aim: to quickly (locally) react to some input event like input value changed
 
-static debug_level_t uDebugLevel = DEBUG_LOG;
+static debug_level_t uDebugLevel = DEBUG_WARN;
 
 #define QA_MAX_ENTRIES (5)
 

@@ -4,7 +4,7 @@
 
 #include "my_common.h"
 
-static debug_level_t uDebugLevel = DEBUG_LOG;
+static debug_level_t uDebugLevel = DEBUG_WARN;
 
 bool SERIAL_publish( const char* payload) {
     return DEBLN(payload);
