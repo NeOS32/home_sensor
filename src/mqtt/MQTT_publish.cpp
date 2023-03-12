@@ -4,10 +4,11 @@
 
 #include "my_common.h"
 
-static debug_level_t uDebugLevel = DEBUG_WARN;
+//static debug_level_t uDebugLevel = DEBUG_WARN;
 
 bool SERIAL_publish( const char* payload) {
-    return DEBLN(payload);
+    DEBLN(payload);
+    return true;
 }
 
 bool MQTT_publish(const char* topic, const char* payload) {
@@ -22,15 +23,23 @@ bool MSG_Publish_State(const char* payload) {
     return MSG_Publish(MQTT_DEV_STATE, payload);
 }
 
+bool MSG_Publish_State_Errors(const char* payload) {
+    return MSG_Publish(MQTT_DEV_STATE_ERRORS, payload);
+}
+
+bool MSG_Publish_State_Buildtime(const char* payload) {
+    return MSG_Publish(MQTT_DEV_STATE_BUILDTIME, payload);
+}
+
+bool MSG_Publish_Presence(const char* payload) {
+    return MSG_Publish(MQTT_DEV_PRESENCE, payload);
+}
+
 bool MSG_Publish_Command(const char* payload) {
     return MSG_Publish(MQTT_DEVICES_CMNDS, payload);
 }
 
 bool MSG_Publish_Debug(const char* payload) {
     return MSG_Publish(MQTT_DEBUG, payload);
-}
-
-bool MSG_Publish_Status(const char* payload) {
-    return MSG_Publish(MQTT_ARD_DEVICES_STATUS, payload);
 }
 

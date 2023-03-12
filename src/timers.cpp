@@ -32,7 +32,7 @@ void alarm_30s() {
         str += F("C, Ch1T=");
         str += HYSTERESIS_getTemp(1);
         str += F("C");
-        MSG_Publish_Debug( str.c_str());
+        MSG_Publish_Debug(str.c_str());
         //DEB_L(str);
     }
     String str(tempScaled >> 12);
@@ -71,7 +71,7 @@ static void timers_ShowErrors(void) {
     String str(MQTT_CLIENT_NAME);
     str += F(": ");
     str += ERR_GetNumberOfGlobalErrors();
-    if (false == MSG_Publish(MQTT_ARD_DEVICES_ERRORS, str.c_str())) {
+    if (false == MSG_Publish_State_Errors( str.c_str())) {
         DEBLN(F("Failed with publishing! (probably to long)"));
     }
 }
@@ -79,37 +79,42 @@ static void timers_ShowErrors(void) {
 // once a minute, we want to read all avail nodes addresses and publish it to
 // the broker
 void alarm_1m() {
-    String str(MQTT_CLIENT_NAME);
-    str += F(": Up=");
-    str += retUpTime();
+    {
+        String str(MQTT_CLIENT_NAME);
+        str += F(": Up=");
+        str += retUpTime();
 
-    if (false == MSG_Publish_State(str.c_str()))
-        DEBLN(F("Failed with publishing! (probably to long)"));
-
-    String str1(F("Active timers: "));
-    str1 += MAX_TIMERS - TIMER_GetNumberOfFreeTimers();
-    str1 += F(", Errs: ");
-    str1 += ERR_GetNumberOfGlobalErrors();
-    if (false == MSG_Publish_State(str1.c_str())) {
-        DEBLN(F("Failed with publishing! (probably to long)"));
+        if (false == MSG_Publish_Presence(str.c_str()))
+            DEBLN(F("Failed with publishing! (probably to long)"));
     }
 
+    {
+        String str1(F("Active timers: "));
+        str1 += MAX_TIMERS - TIMER_GetNumberOfFreeTimers();
+        str1 += F(", Errs: ");
+        str1 += ERR_GetNumberOfGlobalErrors();
+        if (false == MSG_Publish_State(str1.c_str())) {
+            DEBLN(F("Failed with publishing! (probably to long)"));
+        }
+    }
+}
+
+void alarm_2m() {
     PIN_DisplayAssignments();
     TIMER_PrintActiveTimers();
     CMNDS_DisplayAssignments();
+
+    timers_ShowErrors();
+#if 1==N32_CFG_WITH_ERR_STORAGE
+    ERR_ShowGlobalErrors();
+#endif // N32_CFG_WITH_ERR_STORAGE
+
 #if 1==N32_CFG_HISTERESIS_ENABLED
     HIST_DisplayAssignments();
 #endif // 1==N32_CFG_HISTERESIS_ENABLED
 #if 1==N32_CFG_QUICK_ACTIONS_ENABLED
     QA_DisplayAssignments();
 #endif // 1 == N32_CFG_QUICK_ACTIONS_ENABLED
-}
-
-void alarm_2m() {
-    timers_ShowErrors();
-#if 1==N32_CFG_WITH_ERR_STORAGE
-    ERR_ShowGlobalErrors();
-#endif // N32_CFG_WITH_ERR_STORAGE
 }
 
 // once a minute, we want to read all avail nodes addresses and publish it to
@@ -122,7 +127,7 @@ void alarm_15m() {
     str += __DATE__;
     str += F(" ");
     str += __TIME__;
-    if (false == MSG_Publish_State(str.c_str())) {
+    if (false == MSG_Publish_State_Buildtime(str.c_str())) {
         DEB_W(F("Failed with publishing! (probably to long)"));
     }
 

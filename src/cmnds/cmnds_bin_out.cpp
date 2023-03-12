@@ -7,6 +7,7 @@
 #if 1 == N32_CFG_BIN_OUT_ENABLED
 
 static debug_level_t uDebugLevel = DEBUG_WARN;
+static bool bModuleInitialised= false;
 
 #define BIN_MAX (0xFF)
 
@@ -140,9 +141,13 @@ void BIN_OUT_ModuleInit(void) {
             uLogChannel < BIN_OUT_NUM_OF_AVAIL_CHANNELS; uLogChannel++)
             binout_SetupChannel(uLogChannel, LOW);
     }
+
+    bModuleInitialised= true;
 }
 
 bool BIN_OUT_ExecuteCommand(const state_t& s) {
+    CHECK_SANITY();
+
     actions_t Actions;
     Actions.fun_start = binout_ChannelTurnON;
     Actions.fun_stop = binout_ChannelTurnOFF;
@@ -190,6 +195,8 @@ bool BIN_OUT_ExecuteCommand(const state_t& s) {
  * B2ANS - All outputs are reset (set NOT ACTIIVE forced)
  */
 bool decode_CMND_B(const byte* payload, state_t& s, u8* o_CmndLen) {
+    CHECK_SANITY();
+
     const byte* cmndStart = payload;
     bool sanity_ok = false;
 

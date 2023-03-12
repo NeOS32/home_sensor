@@ -48,7 +48,7 @@ static bool doCheckIfNewModIsOk(getPhysicalPinFromLogical_f i_fTransform,
                 str += PINS[i].m_module_name;
                 str += F("'\n");
                 MSG_Publish(String(MQTT_DEBUG).c_str(), str.c_str());
-                // DEBLN(str);
+                DEBLN(str);
 
                 return (false);
             }
@@ -62,8 +62,11 @@ bool PIN_RegisterPins(getPhysicalPinFromLogical_f i_fTransform, int i_Count,
     const __FlashStringHelper* i_pModule,
     int i_LogicalFirstPin) {
 
-    if (false == doCheckIfNewModIsOk(i_fTransform, i_Count, i_pModule, i_LogicalFirstPin))
+    if (false == doCheckIfNewModIsOk(i_fTransform, i_Count, i_pModule, i_LogicalFirstPin)) {
+        THROW_ERROR();
+        DEBLN(F("ERR: logical error with pins setting"));
         return false;
+    }
 
     if (count_pin_groups < MAX_PIN_ASSIGNMENTS) {
         PINS[count_pin_groups].m_Fun = i_fTransform;
@@ -73,8 +76,11 @@ bool PIN_RegisterPins(getPhysicalPinFromLogical_f i_fTransform, int i_Count,
         count_pin_groups++;
         return true;
     }
-    else
+    else {
+        THROW_ERROR();
+        DEBLN(F("ERR: too many ping groups - increase in configuration with MAX_PIN_ASSIGNMENTS"));
         return false;
+    }
 }
 
 void PIN_DisplayAssignments(void) {
@@ -109,9 +115,9 @@ void PIN_DisplayAssignments(void) {
         uTotalPins += PINS[i].m_pins_count;
 
         MSG_Publish_Debug(str.c_str());
-#if 1 == DEBUG_LOCAL
-        DEBLN(str);
-#endif
+        IF_DEB_L() {
+            DEBLN(str);
+        }
     }
     str = F("Total: ");
     str += uTotalPins;

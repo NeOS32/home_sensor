@@ -4,7 +4,7 @@
 
 #include "my_common.h"
 
-#define LOOP_DELAY_TIME_IN_MS (200)
+#define LOOP_DELAY_TIME_IN_MS (100)
 
 static debug_level_t uDebugLevel = DEBUG_WARN;
 
@@ -45,6 +45,7 @@ void loop() {
     wdt_reset();
 #endif // N32_CFG_WATCHDOG_ENABLED
 
+#if 1==N32_CFG_ETH_ENABLED
     IF_DEB_L() {
         static u32 i = 0;
         i++;
@@ -52,10 +53,8 @@ void loop() {
             MSG_Publish_Debug(String(F("Tick!")).c_str());
     }
 
-#if 1==N32_CFG_ETH_ENABLED
     // low level ethernet section
     handler_Ethernet();
-#endif // N32_CFG_ETH_ENABLED
 
     // MQTT section
     if (!gClient_Mosq.connected())
@@ -65,7 +64,6 @@ void loop() {
 
     // TIME handling section
     time_t t = now(); // blocking funtion, that eventually calls NTP for curret
-                      // time (via getNtpTime())
 
     // we just want to check it once a second
     if (prev_t != t) {
@@ -88,7 +86,8 @@ void loop() {
 
         prev_t = t;
     }
+#endif // N32_CFG_ETH_ENABLED
 
-    // sleep LOOP_DELAY_TIME_IN_MS ms == 200 ms
+    // sleep some time between loops
     Alarm.delay(LOOP_DELAY_TIME_IN_MS);
 }

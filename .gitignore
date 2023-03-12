@@ -58,3 +58,6 @@ dkms.conf
 # pio / vscode env 
 .pio/*
 .vscode/*
+
+# private configs
+include/cfgs/*

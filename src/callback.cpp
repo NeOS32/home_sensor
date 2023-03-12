@@ -4,9 +4,9 @@
 
 #include "my_common.h"
 
+#if 1 == N32_CFG_VALVE_ENABLED
 static debug_level_t uDebugLevel = DEBUG_LOG;
 
-#if 1 == N32_CFG_VALVE_ENABLED
 static void turn_off_valve(unsigned int channel, unsigned int valve) {
     // decreas number of timers
     if (num_of_active_timers > 0)

@@ -7,8 +7,10 @@
 #if 1 == N32_CFG_TEMP_ENABLED
 
 static debug_level_t uDebugLevel = DEBUG_WARN;
+static bool bModuleInitialised= false;
 
 #define DEFAULT_DELAY_FOR_CONVERSION_IN_S 5
+#define DEFAULT_DS18B20_READING_TIME_IN_S 30
 
 #define TEMP_MIN (-100)
 #define TEMP_MAX (99)
@@ -40,7 +42,7 @@ static void handler_UpdateSensorsAddr(void) {
     }
 }
 
-static void HANDLER_OneWire(void) {
+static void handler_OneWire(void) {
 
     if (ds18b20_sensors.getNumberOfDevices()) {
         uint8_t address[DS18B20_ADDRESS_SIZE]; // a buffer for sensor address
@@ -76,14 +78,14 @@ static void HANDLER_OneWire(void) {
         ds18b20_sensors.doConversion();
     }
     else
-        DEB_W(F(" No Temp sensors found!"));
+        DEB_W(F("WARN: No Temp sensors found!\n"));
 }
 
-static void temp_AlarmFun(void) { HANDLER_OneWire(); }
+static void temp_AlarmFun(void) { handler_OneWire(); }
 
 static bool ds18b20_getPinFromChannelNum(u8 i_ChannelNumber, u8& o_PinNumber) {
     if (i_ChannelNumber < DS18B20_NUM_OF_AVAIL_CHANNELS) {
-        o_PinNumber = ONEWIRE_FIRST_PIN_NUM + i_ChannelNumber;
+        o_PinNumber = ONEWIRE_PIN_NUM_FIRST + i_ChannelNumber;
         return true;
     }
 
@@ -96,11 +98,13 @@ void TEMP_ModuleInit(void) {
     ds18b20_sensors.doConversion();
 
     // make it cyclic
-    Alarm.timerRepeat(15, temp_AlarmFun);
+    SETUP_RegisterTimer(DEFAULT_DS18B20_READING_TIME_IN_S, temp_AlarmFun);
 
     // module registry
     PIN_RegisterPins(ds18b20_getPinFromChannelNum,
         DS18B20_NUM_OF_AVAIL_CHANNELS, F("DS18B20"));
+
+    bModuleInitialised= true;
 }
 
 // ------------- EFFECTS -------------
@@ -138,6 +142,7 @@ static void temp_SendResults(actions_context_t& i_rActionsContext) {
 }
 
 bool TEMP_ExecuteCommand(const state_t& s) {
+    CHECK_SANITY();
 
     actions_t Actions; //{bin_ChannelTurnON, bin_ChannelTurnOFF};
     actions_context_t ActionsContext;
@@ -184,8 +189,10 @@ bool TEMP_ExecuteCommand(const state_t& s) {
  * T4A - Pause/Restart temperature conversion
  */
 bool decode_CMND_T(const byte* payload, state_t& s, u8* o_CmndLen) {
-    const byte* cmndStart = payload;
+    CHECK_SANITY();
     
+    const byte* cmndStart = payload;
+
     s.command = (*payload++) - '0'; // 0..4
     s.c.t.channel = (*payload++) - '0'; // 0..DS18B20_NUM_OF_AVAIL_CHANNELS
 

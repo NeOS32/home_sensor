@@ -10,14 +10,17 @@ static debug_level_t uDebugLevel = DEBUG_WARN;
 // timers data structures
 static my_timer_t T[MAX_TIMERS];
 
-void TIMER_ModInit(void) {
+/// @brief Initializes the TIMER module
+void TIMER_ModInit() {
     _FOR(u, 0, MAX_TIMERS) {
         T[u].active = false;
         T[u].type = TIMER_SHOT_ONCE;
     }
 }
 
-static u8 timer_getFirstFreeTimer(void) {
+/// @brief Returns first free timer
+/// @return returns timer id of the first free timer
+static u8 timer_getFirstFreeTimer() {
     _FOR(u, 0, MAX_TIMERS)
         if (false == T[u].active)
             return u;
@@ -25,7 +28,9 @@ static u8 timer_getFirstFreeTimer(void) {
     return TIMER_NULL;
 }
 
-u8 TIMER_GetNumberOfFreeTimers(void) {
+/// @brief Returns numer of free timers
+/// @return number of free timers
+u8 TIMER_GetNumberOfFreeTimers() {
     u8 TimersAvail = 0;
 
     _FOR(u, 0, MAX_TIMERS)
@@ -35,6 +40,9 @@ u8 TIMER_GetNumberOfFreeTimers(void) {
     return TimersAvail;
 }
 
+/// @brief Checks whether a timer is active
+/// @param timer_id timer_id of timer to be checked
+/// @return boolean value being true if timer is active
 bool TIMER_IsActive(u8 timer_id) {
     if (timer_id >= MAX_TIMERS)
         return false;
@@ -42,6 +50,12 @@ bool TIMER_IsActive(u8 timer_id) {
     return T[timer_id].active;
 }
 
+/// @brief Starts a timer
+/// @param i_rActions actions that should be triggered when timer starts and stops
+/// @param i_rActionContext actions context (functions context)
+/// @param time_seconds timer time span
+/// @param i_eTimerType timer type (once vs multiple call)
+/// @return timer_id of timer being allocated and launched. TIMER_NULL otherwise
 u8 TIMER_Start(const actions_t& i_rActions, actions_context_t& i_rActionContext,
     unsigned long time_seconds, timer_type_t i_eTimerType) {
     u8 iFreeTimer;
@@ -67,8 +81,6 @@ u8 TIMER_Start(const actions_t& i_rActions, actions_context_t& i_rActionContext,
             str += T[iFreeTimer].m_actions_context.timer_id;
             str += F(", slot=");
             str += T[iFreeTimer].m_actions_context.slot;
-            str += F(", timer_id=");
-            str += T[iFreeTimer].m_actions_context.timer_id;
             str += F(", active=");
             str += T[iFreeTimer].active;
             str += F(", type=");
@@ -78,20 +90,26 @@ u8 TIMER_Start(const actions_t& i_rActions, actions_context_t& i_rActionContext,
 
         // actual starting timer
         if (NULL != T[iFreeTimer].m_actions.fun_start)
-            (T[iFreeTimer].m_actions.fun_start)(
-                T[iFreeTimer].m_actions_context);
+            (T[iFreeTimer].m_actions.fun_start)(T[iFreeTimer].m_actions_context);
     };
 
     return iFreeTimer;
 }
 
+/// @brief Retrieves function context of given timer
+/// @param timer_id timer_id of which functions contenxt is being retrieved
+/// @return pointer to the structure
 actions_context_t* TIMER_getActionContext(u8 timer_id) {
     if (TIMER_NULL == timer_id || timer_id >= MAX_TIMERS)
-        return (NULL);
+        return NULL;
 
     return &T[timer_id].m_actions_context;
 }
 
+/// @brief Restarts given timer
+/// @param timer_id timer_id which is going to be restarted
+/// @param time_seconds next timer call period
+/// @return result of the operation
 bool TIMER_ReStart(u8 timer_id, unsigned long time_seconds) {
 
     do {
@@ -111,6 +129,9 @@ bool TIMER_ReStart(u8 timer_id, unsigned long time_seconds) {
     return false;
 }
 
+/// @brief Stops given timer
+/// @param timer_id timer_id which is going to be stopped
+/// @return result of the operation
 bool TIMER_Stop(u8 timer_id) {
     do {
         if (TIMER_NULL == timer_id || timer_id >= MAX_TIMERS)
@@ -147,7 +168,7 @@ bool TIMER_Stop(u8 timer_id) {
 
             // we called client's stop, but did he retriggered the timer?
             if (true == T[timer_id].active) { // we can expect deadline was set
-                                              // by a client, so thats all
+                // by a client, so this is all
                 IF_DEB_L() {
                     String str(F("TIMERS: client retriggered the timer"));
                     DEB_L(str);
@@ -158,7 +179,7 @@ bool TIMER_Stop(u8 timer_id) {
         else {
             IF_DEB_W() {
                 String str(
-                    F("TIMERS: calling stop on none existing timer function!"));
+                    F("TIMERS: calling stop on none existing timer"));
                 DEB_W(str);
                 MSG_Publish_Debug(str.c_str());
             }
@@ -175,12 +196,17 @@ bool TIMER_Stop(u8 timer_id) {
     return false;
 }
 
+/// @brief helper local function to "start" given timer. Can be called multiple times for TIMER_SHOT_MULTIPLE timer type
+/// @param timer_id timer_id which is going to be stopped
 static void timer_TimerFunRecallStart(u8 i_TimerId) {
     if (NULL != T[i_TimerId].m_actions.fun_start)
         (T[i_TimerId].m_actions.fun_start)(T[i_TimerId].m_actions_context);
 }
 
-bool TIMER_ShutdownTimerSilently(u8 i_TimerId) {
+/// @brief Reset the timer of given id
+/// @param i_TimerId id of a timer to be reset
+/// @return result of the operation being true if successfully initialized
+bool TIMER_ResetTimer(u8 i_TimerId) {
     do {
         if (TIMER_NULL == i_TimerId || i_TimerId >= MAX_TIMERS)
             break;
@@ -208,24 +234,30 @@ bool TIMER_ShutdownTimerSilently(u8 i_TimerId) {
         return true;
     } while (0);
 
-    DEB_E(F("ERR: timer_ShutdownTimerSilently: stopping bad timer!\n"));
+    DEB_E(F("ERR: TIMER_ResetTimer: stopping bad timer!\n"));
     THROW_ERROR();
 
     return false;
 }
 
+/// @brief Processes all timer, called once a second
+/// @param  
 void TIMER_ProcessAllTimers(void) {
     _FOR(i, 0, MAX_TIMERS)
         if (true == T[i].active) {
+
             // if a timer is expired, try to shut it down
             if (T[i].time_stop < now())
                 TIMER_Stop(i);
+
             // else if timer is multi, just call it each sec
             else if (TIMER_SHOT_MULTIPLE == T[i].type)
                 timer_TimerFunRecallStart(i);
         }
 }
 
+/// @brief Pritins all active timers
+/// @param  
 void TIMER_PrintActiveTimers(void) {
     bool bFirst = true;
 
@@ -233,8 +265,7 @@ void TIMER_PrintActiveTimers(void) {
         if (true == T[i].active) {
             if (true == bFirst) {
                 String str1(F("\nActive timers:\n-=-=-=-=-="));
-                // DEBLN(str1);
-                MSG_Publish_Debug( str1.c_str());
+                MSG_Publish_Debug(str1.c_str());
                 bFirst = false;
             }
             String str(F(" "));
