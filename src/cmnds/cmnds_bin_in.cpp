@@ -7,6 +7,7 @@
 #if 1 == N32_CFG_BIN_IN_ENABLED
 
 static debug_level_t uDebugLevel = DEBUG_WARN;
+static bool bModuleInitialised= false;
 
 #define BIN_MAX (0xFF)
 #define BIN_IN_CHECK_INTERVAL_IN_SECS (1)
@@ -28,9 +29,14 @@ static bool bin_in_getPinFromChannelNum(u8 i_LogicalChannelNum, u8& o_PhysicalPi
     return false; // error, means function failed to execute command
 }
 
+/// @brief Sets up a logical channel
+/// @param i_LogChannel 
+/// @param DefaultType input channel type. If not speficied, it's set to INPUT_PULLUP
+/// @return false in case of error
 static bool bin_in_SetupChannel(u8 i_LogChannel, u8 DefaultType = INPUT_PULLUP) {
     u8 PhysicalPinNumber;
 
+    // a conversion from the logical and relative number to the physical pin
     if (true == bin_in_getPinFromChannelNum(i_LogChannel, PhysicalPinNumber)) {
         pinMode(PhysicalPinNumber, DefaultType);
         return(true);
@@ -141,11 +147,15 @@ void BIN_IN_ModuleInit(void) {
     // Mask first reading
     prev_mask = readMask();
 
-    // Monitoring task - launch!
-    Alarm.timerRepeat(BIN_IN_CHECK_INTERVAL_IN_SECS, bin_in_AlarmFun);
+    // BIN_IN monitoring task
+    SETUP_RegisterTimer(BIN_IN_CHECK_INTERVAL_IN_SECS, bin_in_AlarmFun);
+
+    bModuleInitialised= true;
 }
 
 bool BIN_IN_ExecuteCommand(const state_t& s) {
+    CHECK_SANITY();
+
     switch (s.command) {
     case CMND_BIN_IN_CHANNELS_GET: // DONE
         return (bin_in_UpdateStatus(true));
@@ -162,6 +172,8 @@ bool BIN_IN_ExecuteCommand(const state_t& s) {
  * I1S - Update the state (forced)
  */
 bool decode_CMND_I(const byte* payload, state_t& s, u8* o_CmndLen) {
+    CHECK_SANITY();
+    
     const byte* cmndStart = payload;
 
     s.command = (*payload++) - '0'; // [0..8] - command

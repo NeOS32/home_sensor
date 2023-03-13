@@ -4,7 +4,7 @@
 
 #include "my_common.h"
 
-static debug_level_t uDebugLevel = DEBUG_LOG;
+//static debug_level_t uDebugLevel = DEBUG_LOG;
 
 u32 getSecondsFromNumberAndScale(char number, char scale) {
     if ((number > 9) || (number < 0))

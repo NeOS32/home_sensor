@@ -14,14 +14,22 @@ void MQTT_reconnect() {
     while (!gClient_Mosq.connected()) {
 
         // Attempt to connect
-        if (gClient_Mosq.connect(MQTT_CLIENT_NAME)) {
+#if 1 == N32_CFG_MQTT_SECURE
+        char l_user[MQTT_MAX_USER_LENGTH + 1];
+        char l_passwd[MQTT_MAX_PASSWD_LENGTH + 1];
+        strcpy_P(l_user, (char*)pgm_read_word(&g_mqtt_user));
+        strcpy_P(l_passwd, (char*)pgm_read_word(&g_mqtt_passwd));
 
+        if (gClient_Mosq.connect(MQTT_CLIENT_NAME, l_user, l_passwd)) {
+#else
+        if (gClient_Mosq.connect(MQTT_CLIENT_NAME)) {
+#endif
             // Once connected, publish an announcement...
             IF_DEB_L() {
                 String str(MQTT_CLIENT_NAME);
                 str += F(" - connected!");
+                MSG_Publish_State( str.c_str());
                 DEB_L(str);
-                MSG_Publish(MQTT_ARD_DEVICES_STATUS, str.c_str());
             }
 
             // ... and resubscribe

@@ -256,7 +256,7 @@ bool decode_CMND_P(const byte* payload, state_t& s, u8* o_CmndLen) {
     str += F(", Sum: ");
     str += (s.sum + '0');
     //DEBLN(str);
-    MSG_Publish(MQTT_DEBUG, str.c_str());
+    MSG_Publish_Debug(str.c_str());
 #endif // DEBUG_LOCAL
 
     // setting decoded and valid cmnd length
