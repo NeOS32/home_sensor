@@ -67,7 +67,7 @@ void QA_ModuleInit(void) {
         String str(F("QA: init with: "));
         str += e2prom_cfg.num_of_valid_entries;
         str += F(" quick actions.");
-        SERIAL_publish(str.c_str());
+        MSG_Publish_Debug(str.c_str());
     }
 }
 
@@ -79,7 +79,7 @@ bool QA_isStateTracked(char i_Modules, u8 i_Channel, u8 i_uState, u8& o_uSlotNum
             IF_DEB_L() {
                 String str(F("QA: found slot: "));
                 str += i;
-                SERIAL_publish(str.c_str());
+                MSG_Publish_Debug(str.c_str());
             }
             o_uSlotNumber = i;
             return true;
@@ -98,20 +98,32 @@ bool QA_isStateTracked(char i_Modules, u8 i_Channel, u8 i_uState, u8& o_uSlotNum
             str += t._value;
             str += F(", i_uState=");
             str += i_uState;
-            SERIAL_publish(str.c_str());
+            MSG_Publish_Debug(str.c_str());
         }
 
     }
     return false;
 }
 
-bool QA_ExecuteCommand(u8 slot_num) {
-    struct myEntry_s& e = e2prom_cfg.entries[slot_num];
+bool QA_ExecuteCommand(u8 i_uSlotNum) {
+    // sanity check
+    if (i_uSlotNum>= QA_MAX_ENTRIES ) {
+
+        IF_DEB_E() {
+            String str(F("ERR: QA: reached max slot number with value: "));
+            str += i_uSlotNum;
+            MSG_Publish_Debug(str.c_str());
+        }
+        THROW_ERROR();
+        return false;
+    }
+
+    struct myEntry_s& e = e2prom_cfg.entries[i_uSlotNum];
 
     IF_DEB_T() {
         String str(F("QA: Executing command for slot: "));
-        str += slot_num;
-        SERIAL_publish(str.c_str());
+        str += i_uSlotNum;
+        MSG_Publish_Debug(str.c_str());
     }
 
     return(CMNDS_Launch(&e.cmnd[e.src_cmnd_len]));
@@ -145,7 +157,7 @@ static bool qa_StoreConfiguration(const byte* command, const triplet_t& i_t, u8 
             str += i_src_cmndLen;
             str += F(", dst_cmndLen=");
             str += i_dst_cmndLen;
-            SERIAL_publish(str.c_str());
+            MSG_Publish_Debug(str.c_str());
         }
 
         return true;
@@ -153,7 +165,7 @@ static bool qa_StoreConfiguration(const byte* command, const triplet_t& i_t, u8 
     else {
         IF_DEB_W() {
             String str(F("QA: no more free entries available!"));
-            SERIAL_publish(str.c_str());
+            MSG_Publish_Debug(str.c_str());
         }
     }
 
@@ -172,7 +184,7 @@ static bool qa_AnalyzeCommand(const byte* command, triplet_t& o_t, u8& o_src_cmn
             str += command[1];
             str += F(", ");
             str += command[2];
-            SERIAL_publish(str.c_str());
+            MSG_Publish_Debug(str.c_str());
         }
         return false;
     }
@@ -187,7 +199,7 @@ static bool qa_AnalyzeCommand(const byte* command, triplet_t& o_t, u8& o_src_cmn
     if (false == CMNDS_decodeCmnd(command, s, &o_dst_cmndLen)) {
         IF_DEB_L() {
             String str(F("QA: bad decoding with a command"));
-            SERIAL_publish(str.c_str());
+            MSG_Publish_Debug(str.c_str());
         }
         return false;
     }
@@ -197,7 +209,7 @@ static bool qa_AnalyzeCommand(const byte* command, triplet_t& o_t, u8& o_src_cmn
         String str(F("QA: decoded dest length: '"));
         str += o_dst_cmndLen;
         str += F("'");
-        SERIAL_publish(str.c_str());
+        MSG_Publish_Debug(str.c_str());
     }
 
     return true; // error
@@ -216,7 +228,7 @@ static bool qa_RemoveCommand(const byte* command, u8& decodedLen) {
             str += command[2];
             str += F(", ");
             str += command[3];
-            SERIAL_publish(str.c_str());
+            MSG_Publish_Debug(str.c_str());
         }
         return false;
     }
@@ -244,7 +256,7 @@ static bool qa_RemoveAll() {
     if (0x0 == e2prom_cfg.num_of_valid_entries) {
         IF_DEB_L() {
             String str(F("QA: clearing already cleared QA commands"));
-            SERIAL_publish(str.c_str());
+            MSG_Publish_Debug(str.c_str());
         }
     }
     e2prom_cfg.num_of_valid_entries = 0;
@@ -303,10 +315,6 @@ void QA_DisplayAssignments(void) {
 bool decode_CMND_Q(const byte* payload, state_t& s, u8* o_CmndLen) {
     const byte* cmndStart = payload;
 
-    // DEB("\n----------------- in decoder:\n");
-    // _FOR(i, 0, 10)
-    //     DEB((char)payload[i]);
-
     u8 src_cmndLen, dst_cmndLen;
     triplet_t t;
 
@@ -356,7 +364,7 @@ bool decode_CMND_Q(const byte* payload, state_t& s, u8* o_CmndLen) {
         str += char(*(payload));
         str += F("', decodedCmndLen: ");
         str += decodedCmndLen;
-        SERIAL_publish(str.c_str());
+        MSG_Publish_Debug(str.c_str());
 
         if (true == (sanity_ok = isSumOk(s))) {
             // it's ok, so change the states
@@ -397,7 +405,7 @@ bool decode_CMND_Q(const byte* payload, state_t& s, u8* o_CmndLen) {
         str += decodedCmndLen;
         str += F(", Sum: ");
         str += (s.sum + '0');
-        SERIAL_publish(str.c_str());
+        MSG_Publish_Debug(str.c_str());
     }
 
     // setting decoded and valid cmnd length

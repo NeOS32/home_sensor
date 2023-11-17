@@ -42,4 +42,3 @@ bool MSG_Publish_Command(const char* payload) {
 bool MSG_Publish_Debug(const char* payload) {
     return MSG_Publish(MQTT_DEBUG, payload);
 }
-

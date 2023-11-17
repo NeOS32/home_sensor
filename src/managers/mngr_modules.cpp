@@ -8,28 +8,28 @@
 const static module_funs_t MODS[] =
 {
 #if 1==N32_CFG_BIN_IN_ENABLED
-        {.m_module_letter = 'I', .m_module_name = 0, .m_mod_init = BIN_IN_ModuleInit, .m_get_caps = BIN_IN_getCapabilities },
+        {.m_module_letter = 'I', .m_module_name = 0, .m_get_caps = BIN_IN_getCapabilities },
 #endif // N32_CFG_BIN_IN_ENABLED
 #if 1==N32_CFG_BIN_OUT_ENABLED
-        {.m_module_letter = 'B', .m_module_name = 0, .m_mod_init = BIN_OUT_ModuleInit, .m_get_caps = BIN_OUT_getCapabilities },
+        {.m_module_letter = 'B', .m_module_name = 0, .m_get_caps = BIN_OUT_getCapabilities },
 #endif // N32_CFG_BIN_OUT_ENABLED
 #if 1==N32_CFG_PWM_ENABLED
-        {.m_module_letter = 'P', .m_module_name = 0, .m_mod_init = PWM_ModuleInit, .m_get_caps = PWM_getCapabilities },
+        {.m_module_letter = 'P', .m_module_name = 0, .m_get_caps = PWM_getCapabilities },
 #endif // N32_CFG_PWM_ENABLED
 #if 1==N32_CFG_LED_W2918_ENABLED
-        {.m_module_letter = 'L', .m_module_name = 0, .m_mod_init = LED_ModuleInit, .m_get_caps = LED_getCapabilities },
+        {.m_module_letter = 'L', .m_module_name = 0, .m_get_caps = LED_getCapabilities },
 #endif // N32_CFG_LED_W2918_ENABLED
 #if 1==N32_CFG_TEMP_ENABLED
-        {.m_module_letter = 'T', .m_module_name = 0, .m_mod_init = TEMP_ModuleInit, .m_get_caps = TEMP_getCapabilities },
+        {.m_module_letter = 'T', .m_module_name = 0, .m_get_caps = TEMP_getCapabilities },
 #endif // N32_CFG_TEMP_ENABLED
 #if 1 == N32_CFG_QUICK_ACTIONS_ENABLED
-        {.m_module_letter = 'Q', .m_module_name = 0, .m_mod_init = QA_ModuleInit, .m_get_caps = QA_getCapabilities },
+        {.m_module_letter = 'Q', .m_module_name = 0, .m_get_caps = QA_getCapabilities },
 #endif // N32_CFG_QUICK_ACTIONS_ENABLED
 #if 1==N32_CFG_ANALOG_IN_ENABLED
-    {.m_module_letter = 'A', .m_module_name = 0, .m_mod_init = ANALOG_ModuleInit, .m_get_caps = ANALOG_getCapabilities },
+    {.m_module_letter = 'A', .m_module_name = 0, .m_get_caps = ANALOG_getCapabilities },
 #endif // N32_CFG_ANALOG_IN_ENABLED
 #if 1==N32_CFG_HISTERESIS_ENABLED
-    {.m_module_letter = 'H', .m_module_name = 0, .m_mod_init = HYSTERESIS_ModuleInit, .m_get_caps = HYST_getCapabilities },
+    {.m_module_letter = 'H', .m_module_name = 0, .m_get_caps = HYST_getCapabilities },
 #endif // N32_CFG_HISTERESIS_ENABLED
 };
 

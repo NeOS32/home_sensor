@@ -7,7 +7,7 @@
 #if 1 == N32_CFG_BIN_IN_ENABLED
 
 static debug_level_t uDebugLevel = DEBUG_WARN;
-static bool bModuleInitialised= false;
+static bool bModuleInitialised = false;
 
 #define BIN_MAX (0xFF)
 #define BIN_IN_CHECK_INTERVAL_IN_SECS (1)
@@ -26,24 +26,79 @@ static bool bin_in_getPinFromChannelNum(u8 i_LogicalChannelNum, u8& o_PhysicalPi
     }
 
     THROW_ERROR();
-    return false; // error, means function failed to execute command
+    return false; // error, means function failed to execute command properly or there is an error in logic
+}
+
+static volatile u8 portBstatus = 0;
+static void pin_change() {
+    portBstatus = PINB;
 }
 
 /// @brief Sets up a logical channel
 /// @param i_LogChannel 
-/// @param DefaultType input channel type. If not speficied, it's set to INPUT_PULLUP
+/// @param i_PinType input channel type. If not speficied, it's set to BIN_IN_PIN_TYPE_DH
 /// @return false in case of error
-static bool bin_in_SetupChannel(u8 i_LogChannel, u8 DefaultType = INPUT_PULLUP) {
-    u8 PhysicalPinNumber;
+static bool bin_in_SetupChannel(u8 i_LogChannel, binn_in_pin_type_t i_PinType = BIN_IN_PIN_TYPE_DH) {
+    u8 uPhysicalPinNumber;
+    int irq = -1;
 
-    // a conversion from the logical and relative number to the physical pin
-    if (true == bin_in_getPinFromChannelNum(i_LogChannel, PhysicalPinNumber)) {
-        pinMode(PhysicalPinNumber, DefaultType);
+    // a conversion from the logical (relative number) to the physical pin
+    if (true == bin_in_getPinFromChannelNum(i_LogChannel, uPhysicalPinNumber)) {
+        switch (i_PinType)
+        {
+        case BIN_IN_PIN_TYPE_DL:
+            pinMode(uPhysicalPinNumber, INPUT);  // it's essential to have pulldown resistor connected
+            break;
+
+        case BIN_IN_PIN_TYPE_DH:
+            pinMode(uPhysicalPinNumber, INPUT_PULLUP);
+            break;
+
+        case BIN_IN_LOGICAL_LOW_TRIGGERS_INTERRUPT:
+            pinMode(uPhysicalPinNumber, INPUT_PULLUP);
+            irq = digitalPinToInterrupt(uPhysicalPinNumber);
+            if (NOT_AN_INTERRUPT == irq)
+                goto ERROR_IN_PARAM;
+            attachInterrupt(irq, pin_change, LOW);
+            break;
+
+        case BIN_IN_LOGICAL_CHANGE_TRIGGERS_INTERRUPT:
+            pinMode(uPhysicalPinNumber, INPUT_PULLUP);
+            irq = digitalPinToInterrupt(uPhysicalPinNumber);
+            if (NOT_AN_INTERRUPT == irq)
+                goto ERROR_IN_PARAM;
+            attachInterrupt(irq, pin_change, CHANGE);
+            break;
+
+        case BIN_IN_FALLING_EDGE_TRIGGERS_INTERRUPT:
+            pinMode(uPhysicalPinNumber, INPUT_PULLUP);
+            irq = digitalPinToInterrupt(uPhysicalPinNumber);
+            if (NOT_AN_INTERRUPT == irq)
+                goto ERROR_IN_PARAM;
+            attachInterrupt(irq, pin_change, FALLING);
+            break;
+
+        case BIN_IN_RISING_EDGE_TRIGGERS_INTERRUPT:
+            pinMode(uPhysicalPinNumber, INPUT); // it's essential to have pulldown resistor connected
+            irq = digitalPinToInterrupt(uPhysicalPinNumber);
+            if (NOT_AN_INTERRUPT == irq)
+                goto ERROR_IN_PARAM;
+            attachInterrupt(irq, pin_change, RISING);
+            break;
+
+        default:
+            goto ERROR_IN_PARAM;
+        }
+
+
         return(true);
     }
 
+ERROR_IN_PARAM:
+
     THROW_ERROR();
-    return false; // error, means function failed to execute command
+
+    return false; // error
 }
 
 static u16 readMask(void) {
@@ -68,8 +123,11 @@ static bool bin_in_UpdateStatus(bool i_bForced = false) {
         u16 diffs = current_mask ^ prev_mask;
 
         String strCurrent, strDiff, strOut, str;
+        bool bHasChanged;
         _FOR(i, 0, BIN_IN_NUM_OF_AVAIL_CHANNELS) {
-            if (0x0 != ((1 << i) & diffs)) {
+            bHasChanged = (0x0 != ((1 << i) & diffs));
+
+            if (true == bHasChanged) {
                 // first we have to change states
                 strDiff += F("1");
 
@@ -85,8 +143,8 @@ static bool bin_in_UpdateStatus(bool i_bForced = false) {
                     QA_ExecuteCommand(slot_num); // in e2prom we may have only validated data, so no extra command checking
                 else {
                     IF_DEB_L() {
-                        String str(F("BIN_IN: Flow not tracked"));
-                        SERIAL_publish(str.c_str());
+                        String str(F("BIN_IN: State not tracked, ignoring"));
+                        MSG_Publish_Debug(str.c_str());
                     }
                 }
 #endif // N32_CFG_QUICK_ACTIONS_ENABLED
@@ -102,7 +160,7 @@ static bool bin_in_UpdateStatus(bool i_bForced = false) {
             else
                 strDiff += F("0");
 
-            if (0x0 != ((1 << i) & current_mask))
+            if (true == bHasChanged)
                 strCurrent += F("1");
             else
                 strCurrent += F("0");
@@ -127,13 +185,24 @@ static void bin_in_AlarmFun(void) {
 }
 
 void BIN_IN_ModuleInit(void) {
-    u8 uLogChannel;
 
+    // sanity check first
+    if (true == bModuleInitialised) {
+        IF_DEB_W() {
+            String str(F("BIN IN: module initialized twice!"));
+            DEBLN(str);
+        }
+
+        THROW_ERROR();
+        return;
+    }
+
+    u8 uLogChannel;
     if (BIN_IN_LINE_DH_COUNT > 0) {
         // DH is always first, so offset is "0" - see the last parameter
         PIN_RegisterPins(bin_in_getPinFromChannelNum, BIN_IN_LINE_DH_COUNT, F("BIN_IN_DH"), 0);
         for (uLogChannel = 0; uLogChannel < BIN_IN_LINE_DH_COUNT; uLogChannel++)
-            bin_in_SetupChannel(uLogChannel, INPUT_PULLUP);
+            bin_in_SetupChannel(uLogChannel, BIN_IN_PIN_TYPE_DH);
     }
 
     if (BIN_IN_LINE_DL_COUNT > 0) {
@@ -141,7 +210,7 @@ void BIN_IN_ModuleInit(void) {
         PIN_RegisterPins(bin_in_getPinFromChannelNum, BIN_IN_LINE_DL_COUNT, F("BIN_IN_DL"), BIN_IN_LINE_DH_COUNT);
         for (uLogChannel = BIN_IN_LINE_DH_COUNT;
             uLogChannel < BIN_IN_NUM_OF_AVAIL_CHANNELS; uLogChannel++)
-            bin_in_SetupChannel(uLogChannel, INPUT); // requires external pulldown do GND if floating
+            bin_in_SetupChannel(uLogChannel, BIN_IN_PIN_TYPE_DL); // requires external pulldown do GND if floating
     }
 
     // Mask first reading
@@ -150,11 +219,11 @@ void BIN_IN_ModuleInit(void) {
     // BIN_IN monitoring task
     SETUP_RegisterTimer(BIN_IN_CHECK_INTERVAL_IN_SECS, bin_in_AlarmFun);
 
-    bModuleInitialised= true;
+    bModuleInitialised = true;
 }
 
 bool BIN_IN_ExecuteCommand(const state_t& s) {
-    CHECK_SANITY();
+    CHECK_MODULE_SANITY();
 
     switch (s.command) {
     case CMND_BIN_IN_CHANNELS_GET: // DONE
@@ -172,8 +241,8 @@ bool BIN_IN_ExecuteCommand(const state_t& s) {
  * I1S - Update the state (forced)
  */
 bool decode_CMND_I(const byte* payload, state_t& s, u8* o_CmndLen) {
-    CHECK_SANITY();
-    
+    CHECK_MODULE_SANITY();
+
     const byte* cmndStart = payload;
 
     s.command = (*payload++) - '0'; // [0..8] - command

@@ -4,7 +4,7 @@
 
 #include "my_common.h"
 
-static debug_level_t uDebugLevel = DEBUG_WARN;
+static debug_level_t uDebugLevel = DEBUG_LOG;
 
 #define MAX_PIN_ASSIGNMENTS (12)
 #define MAX_PINS (100)
@@ -19,10 +19,31 @@ static bool doCheckIfNewModIsOk(getPhysicalPinFromLogical_f i_fTransform,
     u8 uFirstPhysicalPinNumber = 0, uLastPhysicalPinNumber = 0;
 
     // checking physiacl pin numbers
-    if (false == i_fTransform(i_LogicalFirstPin, uFirstPhysicalPinNumber))
+    if (false == i_fTransform(i_LogicalFirstPin, uFirstPhysicalPinNumber)) {
+        IF_DEB_W() {
+            String str(F("ERR: PIN: Transform error first pin group, i_LogicalFirstPin="));
+            str += i_LogicalFirstPin;
+            str += F(", uFirstPhysicalPinNumber=");
+            str += uFirstPhysicalPinNumber;
+            DEBLN(str);
+            MSG_Publish_Debug(str.c_str());
+        }
         return false;
-    if (false == i_fTransform(i_LogicalFirstPin + i_Count - 1, uLastPhysicalPinNumber))
+    }
+    if (false == i_fTransform(i_LogicalFirstPin + i_Count - 1, uLastPhysicalPinNumber)){
+        IF_DEB_W() {
+            String str(F("ERR: PIN: Transform error first pin + count group, i_LogicalFirstPin="));
+            str += i_LogicalFirstPin + i_Count;
+            str += F(", uLastPhysicalPinNumber=");
+            str += uLastPhysicalPinNumber;
+            str += F(", Module=");
+            str += i_pModule;
+            
+            DEBLN(str);
+            MSG_Publish_Debug(str.c_str());
+        }
         return false;
+    }
 
     _FOR(i, 0, count_pin_groups) {
         if (0 == PINS[i].m_Fun)
@@ -47,7 +68,7 @@ static bool doCheckIfNewModIsOk(getPhysicalPinFromLogical_f i_fTransform,
                 str += F("'), have already been registered with module: 'Name='");
                 str += PINS[i].m_module_name;
                 str += F("'\n");
-                MSG_Publish(String(MQTT_DEBUG).c_str(), str.c_str());
+                MSG_Publish_Debug(str.c_str());
                 DEBLN(str);
 
                 return (false);
@@ -84,13 +105,12 @@ bool PIN_RegisterPins(getPhysicalPinFromLogical_f i_fTransform, int i_Count,
 }
 
 void PIN_DisplayAssignments(void) {
-    String str;
-
     {
         String str_header(F("Pin assignments:\n-=-=-=-=-="));
         MSG_Publish_Debug(str_header.c_str());
     }
 
+    String str;
     u8 PhysicalPinNumber, uTotalPins = 0;
     _FOR(i, 0, count_pin_groups) {
         str = F(" ");

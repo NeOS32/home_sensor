@@ -8,7 +8,7 @@ static debug_level_t uDebugLevel = DEBUG_LOG;
 
 void MQTT_reconnect() {
 
-    DEB(F("Connecting to MQTT broker: "));
+    DEB(F("Connecting to MQTT broker\n"));
 
     // looping until we're connected
     while (!gClient_Mosq.connected()) {
@@ -36,7 +36,7 @@ void MQTT_reconnect() {
             gClient_Mosq.subscribe(MQTT_DEVICES_CMNDS);
         }
         else {
-            DEB_W(F("ERR: failed, rc="));
+            DEB_W(F("ERR: MQTT: failed, rc="));
             DEB_W(gClient_Mosq.state());
             DEB_W(F(", trying again soon\n"));
             // Wait 5 seconds before retrying

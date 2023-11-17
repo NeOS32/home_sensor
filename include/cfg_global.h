@@ -34,3 +34,9 @@
 #define MQTT_DEV_STATE_ERRORS    C_WRAPPER( "devices/" MQTT_PART_STATE "/" MQTT_PART_ERRORS "/" )
 #define MQTT_DEV_STATE_BUILDTIME C_WRAPPER( "devices/" MQTT_PART_STATE "/" MQTT_PART_BUILDTIME "/" )
 #define MQTT_DEV_PRESENCE        C_WRAPPER( "devices/" MQTT_PART_STATE "/" MQTT_PART_PRESENCE "/" )
+
+// some rationales
+
+#if N32_CFG_BIN_OUT_ENABLED == 0 & BIN_OUT_LINE_DH_COUNT != 0
+#error Set BIN_OUT_LINE_DH_COUNT and BIN_OUT_LINE_DL_COUNT to zero, to save RAM
+#endif

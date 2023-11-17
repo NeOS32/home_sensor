@@ -142,7 +142,7 @@ static void temp_SendResults(actions_context_t& i_rActionsContext) {
 }
 
 bool TEMP_ExecuteCommand(const state_t& s) {
-    CHECK_SANITY();
+    CHECK_MODULE_SANITY();
 
     actions_t Actions; //{bin_ChannelTurnON, bin_ChannelTurnOFF};
     actions_context_t ActionsContext;
@@ -189,7 +189,7 @@ bool TEMP_ExecuteCommand(const state_t& s) {
  * T4A - Pause/Restart temperature conversion
  */
 bool decode_CMND_T(const byte* payload, state_t& s, u8* o_CmndLen) {
-    CHECK_SANITY();
+    CHECK_MODULE_SANITY();
     
     const byte* cmndStart = payload;
 

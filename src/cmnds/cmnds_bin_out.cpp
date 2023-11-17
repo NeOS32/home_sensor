@@ -7,17 +7,18 @@
 #if 1 == N32_CFG_BIN_OUT_ENABLED
 
 static debug_level_t uDebugLevel = DEBUG_WARN;
-static bool bModuleInitialised= false;
+static bool bModuleInitialised = false;
 
 #define BIN_MAX (0xFF)
 
 static bool binout_getPinFromChannelNum(u8 i_ChannelNumber, u8& o_PinNumber) {
+    // Logical channels numbering DL and DH is linera, so DL is always after DH. However, physical pins may be placed anywhere thus BIN_OUT_LINE_DH_FIRST & BIN_OUT_LINE_DHLFIRST was introduced. 
     if (i_ChannelNumber < BIN_OUT_LINE_DH_COUNT) {
         o_PinNumber = BIN_OUT_LINE_DH_FIRST + i_ChannelNumber;
         return true;
     }
     else if (i_ChannelNumber < (BIN_OUT_LINE_DH_COUNT + BIN_OUT_LINE_DL_COUNT)) {
-        o_PinNumber = BIN_OUT_LINE_DL_FIRST + i_ChannelNumber - BIN_OUT_LINE_DH_COUNT;
+        o_PinNumber = BIN_OUT_LINE_DL_FIRST + ( i_ChannelNumber - BIN_OUT_LINE_DH_COUNT );
         return true;
     }
 
@@ -142,11 +143,11 @@ void BIN_OUT_ModuleInit(void) {
             binout_SetupChannel(uLogChannel, LOW);
     }
 
-    bModuleInitialised= true;
+    bModuleInitialised = true;
 }
 
 bool BIN_OUT_ExecuteCommand(const state_t& s) {
-    CHECK_SANITY();
+    CHECK_MODULE_SANITY();
 
     actions_t Actions;
     Actions.fun_start = binout_ChannelTurnON;
@@ -164,6 +165,15 @@ bool BIN_OUT_ExecuteCommand(const state_t& s) {
     if (CMNDS_NULL != (slot = CMNDS_GetSlotNumber(s))) {
         switch (s.command) {
         case CMND_BIN_OUT_B0_CHANNEL_ON_FOR_NS: // DONE
+            IF_DEB_L() {
+                String str(F("BIN:EXEC: CMND: "));
+                str += '0' + CMND_BIN_OUT_B0_CHANNEL_ON_FOR_NS;
+                str += F(", Channel: ");
+                str += s.c.b.channel;
+                str += F(", Pin: ");
+                str += s.c.b.pin;
+                DEBLN(str);
+            }
             if ((u32)0x0 == s.count) { // is that a stopping request?
                 if (CMNDS_isSlotActive(slot)) // is that slot still active?
                     CMNDS_ResetSlotState(slot);
@@ -195,7 +205,7 @@ bool BIN_OUT_ExecuteCommand(const state_t& s) {
  * B2ANS - All outputs are reset (set NOT ACTIIVE forced)
  */
 bool decode_CMND_B(const byte* payload, state_t& s, u8* o_CmndLen) {
-    CHECK_SANITY();
+    CHECK_MODULE_SANITY();
 
     const byte* cmndStart = payload;
     bool sanity_ok = false;
@@ -209,7 +219,7 @@ bool decode_CMND_B(const byte* payload, state_t& s, u8* o_CmndLen) {
     s.count = getSecondsFromNumberAndScale(number, scale);
 
     if (false == binout_getPinFromChannelNum(s.c.b.channel, s.c.b.pin))
-        goto ERROR;
+        goto SKIP;
 
     s.sum = (*payload++) - '0'; // sum = 1
 
@@ -219,11 +229,11 @@ bool decode_CMND_B(const byte* payload, state_t& s, u8* o_CmndLen) {
                 if (true == isSumOk(s))
                     sanity_ok = true;
 
-ERROR:
+SKIP:
     // Info display
     IF_DEB_L() {
         u8 i = s.c.b.channel;
-        String str(F("BIN: channel: "));
+        String str(F("BIN:CMND: channel: "));
         str += i;
         str += F(", Cmd: ");
         i = s.command + '0';
