@@ -62,10 +62,11 @@ u8 TIMER_Start(const actions_t& i_rActions, actions_context_t& i_rActionContext,
 
     // if free timer slot found, and not already ongoing ...
     if (TIMER_NULL != (iFreeTimer = timer_getFirstFreeTimer())) {
+        time_t _now= now();
         T[iFreeTimer].m_actions = i_rActions;
         T[iFreeTimer].m_actions_context = i_rActionContext;
-        T[iFreeTimer].time_start = now();
-        T[iFreeTimer].time_stop = now() + time_seconds;
+        T[iFreeTimer].time_start = _now;
+        T[iFreeTimer].time_stop = _now + time_seconds;
         T[iFreeTimer].active = true;
         T[iFreeTimer].type = i_eTimerType;
 
@@ -117,7 +118,7 @@ bool TIMER_ReStart(u8 timer_id, unsigned long time_seconds) {
             break;
 
         T[timer_id].time_start = now();
-        T[timer_id].time_stop = now() + time_seconds;
+        T[timer_id].time_stop = T[timer_id].time_start + time_seconds;
         T[timer_id].active = true;
 
         return true;
@@ -264,27 +265,46 @@ void TIMER_PrintActiveTimers(void) {
     _FOR(i, 0, MAX_TIMERS)
         if (true == T[i].active) {
             if (true == bFirst) {
-                String str1(F("\nActive timers:\n-=-=-=-=-="));
+                String str1(F("\nActive timers:\n-=-=-=-=-=-=-="));
                 MSG_Publish_Debug(str1.c_str());
                 bFirst = false;
             }
+            time_t diff= T[i].time_stop - now();
             String str(F(" "));
             str += i;
             str += F(": var1=");
             str += T[i].m_actions_context.var1;
-            str += F(",  var2=");
+            str += F(", var2=");
             str += T[i].m_actions_context.var2;
-            str += F(",  slot=");
+            str += F(", slot=");
             str += T[i].m_actions_context.slot;
-            str += F(",  now=");
+            str += F(", now=");
             str += now();
             str += F(", Stop=");
             str += T[i].time_stop;
             str += F(" (sec=");
-            str += T[i].time_stop - now();
+            str += diff;
             str += F(")");
-            str += F(",  type=");
+            str += F(", type=");
             str += T[i].type;
+            str += F(", remaining=");
+            time_t v= diff/SECS_IN_DAY;
+            str += v; diff -= SECS_IN_DAY * v;
+            str += F("d:");
+
+            v= diff/SECS_IN_HOUR;
+            str += v; diff -= SECS_IN_HOUR * v;
+            str += F("h:");
+
+            v= diff/SECS_IN_MINUTE;
+            str += v; diff -= SECS_IN_MINUTE * v;
+            str += F("m:");
+
+            v= diff/SECS_IN_SEC;
+            str += v; diff -= SECS_IN_SEC * v;
+            str += F("s");
+
+            //str += F("\n");
             DEB_T(str);
             MSG_Publish_Debug(str.c_str());
         }

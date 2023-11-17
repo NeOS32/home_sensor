@@ -11,17 +11,25 @@ u32 getSecondsFromNumberAndScale(char number, char scale) {
         number = 0;
     else
         switch (scale) {
-        case 'S': // Seconds
+        case 's': // Seconds factor
+        case 'S': // Seconds factor
             return ((u32)number);
 
-        case 'M': // Minutes
+        case 'm': // Minutes factor
+        case 'M': // Minutes factor
             return ((u32)60 * number);
 
-        case 'T': // TenMinutes
+        case 't': // TenMinutes factor
+        case 'T': // TenMinutes factor
             return ((u32)10 * 60 * number);
 
-        case 'H': // Hours
+        case 'h': // Hours factor
+        case 'H': // Hours factor
             return ((u32)60 * 60 * number);
+
+        case 'd': // Days factor
+        case 'D': // Days factor
+            return ((u32)24 * 60 * 60 * number);
 
         default:
             return ((u32)0);
