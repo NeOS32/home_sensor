@@ -15,7 +15,7 @@
 #define MQTT_PART_PRESENCE "presence"
 #define MQTT_SENSORS_T_MATA C_WRAPPER("mata")
 
-#define APP_VERSION C_WRAPPER( "ardControl: 0v13" )
+#define APP_VERSION C_WRAPPER( "ardControl: 0v14" )
 
 #define ARD_PREFIX C_WRAPPER( "ard:" )
 
